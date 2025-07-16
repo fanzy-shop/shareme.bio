@@ -1,22 +1,77 @@
 <!-- Meta tags for social media previews -->
 <meta property="og:site_name" content="Share Me">
-<meta name="twitter:card" content="summary_large_image">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card meta tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@shareme">
+<meta name="twitter:creator" content="@shareme">
 
 <!-- These tags will be overridden by specific pages -->
 <meta property="og:title" content="<%= typeof page !== 'undefined' && page.metaTitle ? page.metaTitle : (typeof page !== 'undefined' && page.title ? page.title + ' - Share Me' : 'Share Me') %>">
+<meta name="twitter:title" content="<%= typeof page !== 'undefined' && page.metaTitle ? page.metaTitle : (typeof page !== 'undefined' && page.title ? page.title + ' - Share Me' : 'Share Me') %>">
+
 <meta property="og:description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
 <meta name="description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
-<meta property="og:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : '/images/logo.png' %>">
-<meta name="twitter:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : '/images/logo.png' %>">
-<meta property="og:url" content="<%= typeof currentUrl !== 'undefined' ? currentUrl : '' %>">
+<meta name="twitter:description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
+
+<!-- Image meta tags with absolute URLs -->
+<meta property="og:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : (typeof currentUrl !== 'undefined' ? currentUrl.replace(/\/[^\/]*$/, '/images/logo.png') : 'https://shareme.bio/images/logo.png') %>">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="Share Me - Share your stories with the world">
+
+<meta name="twitter:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : (typeof currentUrl !== 'undefined' ? currentUrl.replace(/\/[^\/]*$/, '/images/logo.png') : 'https://shareme.bio/images/logo.png') %>">
+<meta name="twitter:image:alt" content="Share Me - Share your stories with the world">
+
+<!-- URL meta tags -->
+<meta property="og:url" content="<%= typeof currentUrl !== 'undefined' ? currentUrl : 'https://shareme.bio' %>">
+<meta property="canonical" content="<%= typeof currentUrl !== 'undefined' ? currentUrl : 'https://shareme.bio' %>">
+
+<!-- Telegram-specific meta tags -->
+<meta property="telegram:channel" content="@shareme">
+<meta name="telegram:title" content="<%= typeof page !== 'undefined' && page.metaTitle ? page.metaTitle : (typeof page !== 'undefined' && page.title ? page.title + ' - Share Me' : 'Share Me') %>">
+<meta name="telegram:description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
+<meta name="telegram:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : (typeof currentUrl !== 'undefined' ? currentUrl.replace(/\/[^\/]*$/, '/images/logo.png') : 'https://shareme.bio/images/logo.png') %>">
 
 <!-- GitHub-specific meta tags -->
 <meta name="github:title" content="<%= typeof page !== 'undefined' && page.metaTitle ? page.metaTitle : (typeof page !== 'undefined' && page.title ? page.title + ' - Share Me' : 'Share Me') %>">
 <meta name="github:description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
-<meta name="github:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : '/images/logo.png' %>">
+<meta name="github:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : (typeof currentUrl !== 'undefined' ? currentUrl.replace(/\/[^\/]*$/, '/images/logo.png') : 'https://shareme.bio/images/logo.png') %>">
 <meta name="github:card" content="summary_large_image">
+
+<!-- Additional social media meta tags -->
+<meta property="article:author" content="Share Me">
+<meta property="article:publisher" content="https://shareme.bio">
+<meta property="article:section" content="Blog">
+<meta property="article:tag" content="stories, sharing, blog, content">
+
+<!-- Structured Data (JSON-LD) for better social media compatibility -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "<%= typeof page !== 'undefined' && page.metaTitle ? page.metaTitle : (typeof page !== 'undefined' && page.title ? page.title + ' - Share Me' : 'Share Me') %>",
+  "description": "<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>",
+  "url": "<%= typeof currentUrl !== 'undefined' ? currentUrl : 'https://shareme.bio' %>",
+  "image": "<%= typeof page !== 'undefined' && page.image ? page.image : (typeof currentUrl !== 'undefined' ? currentUrl.replace(/\/[^\/]*$/, '/images/logo.png') : 'https://shareme.bio/images/logo.png') %>",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Share Me",
+    "url": "https://shareme.bio"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Share Me"
+  }
+}
+</script>
 
 <!-- Add favicon and logo references -->
 <link rel="icon" href="/images/logo.png" type="image/png">
-<link rel="apple-touch-icon" href="/images/logo.png"> 
+<link rel="apple-touch-icon" href="/images/logo.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png"> 
