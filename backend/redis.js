@@ -1,7 +1,7 @@
 import { createClient } from 'redis';
 
 // Use environment variable for Redis URL if available
-const redisUrl = process.env.REDIS_URL || 'redis://default:AnraPrxbErJfsNCVZZVNHqNSYdXeqwUa@redis.railway.internal:6379';
+const redisUrl = process.env.REDIS_URL || 'redis://default:AnraPrxbErJfsNCVZZVNHqNSYdXeqwUa@tramway.proxy.rlwy.net:32809';
 
 console.log('Using Redis URL:', redisUrl.replace(/\/\/.*?@/, '//***@')); // Log URL with password hidden
 

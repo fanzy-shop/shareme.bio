@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Login Successful - Share Me</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('layouts/header') %>
+</head>
+<body>
+  <div class="container">
+    <div class="editor-main">
+      <div class="content-area">
+        <!-- This page is intentionally minimal as we'll show the popup -->
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Set up initial variables
+    var userName = '<%- user.name %>';
+    var redirectUrl = '<%= redirectUrl %>';
+    
+    // Import and use the popup module
+    import('/js/popup.js').then(module => {
+      const { showSuccessPopup } = module;
+      
+      // Show login success popup
+      showSuccessPopup({
+        title: 'Success!',
+        message: 'You are now logged in as <%- user.name %> in this browser.',
+        redirectUrl: redirectUrl,
+        buttonText: 'CONTINUE'
+      });
+    });
+  </script>
+</body>
+</html> 

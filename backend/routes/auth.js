@@ -49,8 +49,11 @@ router.get('/auth/:token', async (req, res) => {
       }
       
       console.log('Session saved successfully');
-      // Redirect to dashboard
-      res.redirect('/dashboard');
+      // Render success page with popup instead of redirecting
+      res.render('auth-success', {
+        user: user,
+        redirectUrl: '/dashboard'
+      });
     });
   } catch (error) {
     console.error('Authentication error:', error);

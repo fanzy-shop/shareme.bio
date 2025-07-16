@@ -1,4 +1,5 @@
 import { publish } from './api.js';
+import { showSuccessPopup } from './popup.js';
 
 const titleInput = document.querySelector('#title');
 const authorInput = document.querySelector('#author');
@@ -31,8 +32,15 @@ publishBtn.addEventListener('click', async () => {
   if (res.ok) {
     // Store the edit token in localStorage with the slug as the key
     localStorage.setItem(`editToken_${res.slug}`, res.token);
-    // Redirect to the page without the token in the URL
-    window.location.href = `/${res.slug}`;
+    
+    // Show success popup with share link
+    showSuccessPopup({
+      title: 'Published!',
+      message: 'Your content has been published successfully',
+      slug: res.slug,
+      redirectUrl: `/${res.slug}`,
+      buttonText: 'CONTINUE'
+    });
   } else {
     alert(res.error || 'Error');
   }
