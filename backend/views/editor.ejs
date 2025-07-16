@@ -17,8 +17,8 @@
       var page = {};
     }
     
-    // Set properties on page object
-    page.title = pageTitle;
+    // Set properties on page object for meta tags only
+    page.metaTitle = pageTitle;
     page.description = pageDescription;
   %>
   <%- include('layouts/header') %>
@@ -31,7 +31,7 @@
       <div class="content-area">
         <div class="input-wrapper">
           <div class="placeholder-text title-placeholder">Title</div>
-          <textarea id="title" class="title-input" rows="1" oninput="this.style.height = ''; this.style.height = Math.max(32, this.scrollHeight) + 'px'"><% if (page) { %><%= page.title %><% } %></textarea>
+          <textarea id="title" class="title-input" rows="1" oninput="this.style.height = ''; this.style.height = Math.max(32, this.scrollHeight) + 'px'"><% if (page && page.title && !page.title.startsWith('Edit -')) { %><%= page.title %><% } %></textarea>
         </div>
         
         <div class="input-wrapper" id="authorWrapper">
