@@ -90,8 +90,11 @@ app.use(sitemapRoutes);
 // 3. Specific routes
 app.get('/', (req, res) => res.render('editor', { page: null }));
 app.get('/new', (req, res) => {
-  // If user is logged in, pre-fill author name
-  const author = req.session.user ? req.session.user.name : '';
+  // If user is logged in, pre-fill author name from settings
+  let author = '';
+  if (req.session.user) {
+    author = req.session.user.authorName || req.session.user.name || '';
+  }
   res.render('editor', { page: null, author });
 });
 

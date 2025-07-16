@@ -9,7 +9,7 @@
     // Set page data for meta tags
     const page = {
       title: 'Dashboard - Share Me',
-      description: `${user.name}'s dashboard - Manage your posts on Share Me`
+      description: `${user.authorName || user.name}'s dashboard - Manage your posts on Share Me`
     };
   %>
   <%- include('layouts/header') %>
@@ -92,7 +92,7 @@
       <h1>My Account</h1>
       <p>This is your current Shareme.bio account:</p>
       <p><strong><%= user.name %></strong></p>
-      <p>Author: <%= user.name %></p>
+      <p>Author: <%= user.authorName || user.name %></p>
       <p><%= posts.length %> posts</p>
       
       <div class="button-group">

@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyAuthToken, getUser, getUserPosts, removePostFromUser } from '../utils/telegramBot.js';
+import { verifyAuthToken, getUser, getUserPosts, removePostFromUser, getUserSettings } from '../utils/telegramBot.js';
 import { getPage, deletePage } from '../models/pageStore.js';
 
 const router = express.Router();
@@ -31,13 +31,18 @@ router.get('/auth/:token', async (req, res) => {
       });
     }
     
-    // Store user info in session
+    // Get user settings (including custom author name)
+    const settings = await getUserSettings(telegramId);
+    const authorName = settings.authorName || user.name;
+    
+    // Store user info in session with custom author name
     req.session.user = {
       telegramId,
-      name: user.name
+      name: user.name,
+      authorName: authorName
     };
     
-    console.log(`Authentication successful for user: ${user.name}`);
+    console.log(`Authentication successful for user: ${user.name} (Author: ${authorName})`);
     
     // Save the session explicitly before redirecting
     req.session.save((err) => {
@@ -51,7 +56,7 @@ router.get('/auth/:token', async (req, res) => {
       console.log('Session saved successfully');
       // Render success page with popup instead of redirecting
       res.render('auth-success', {
-        user: user,
+        user: { ...user, authorName },
         redirectUrl: '/dashboard'
       });
     });
@@ -77,7 +82,7 @@ router.get('/dashboard', async (req, res) => {
     }
     
     const user = req.session.user;
-    console.log(`Dashboard access for user: ${user.name}`);
+    console.log(`Dashboard access for user: ${user.name} (Author: ${user.authorName})`);
     
     const slugs = await getUserPosts(user.telegramId);
     console.log(`User has ${slugs.length} posts`);

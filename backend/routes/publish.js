@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import xss from 'xss';
 import { savePage, updatePage, getPage } from '../models/pageStore.js';
 import { slugify } from '../utils/slugify.js';
-import { addPostToUser } from '../utils/telegramBot.js';
+import { addPostToUser, getUserSettings } from '../utils/telegramBot.js';
 
 const router = express.Router();
 
@@ -11,10 +11,18 @@ router.post('/publish', async (req, res) => {
   const { slug, editToken, title, content, author } = req.body;
   const cleanTitle = xss(title.trim().slice(0, 120));
   const cleanContent = xss(content, { whiteList: xss.whiteList, css: false });
-  const cleanAuthor = author ? xss(author.trim().slice(0, 50)) : '';
-
+  
   // Get user ID if logged in
   const telegramId = req.session?.user?.telegramId;
+  
+  // Determine author name - use provided author or fall back to user settings
+  let cleanAuthor = author ? xss(author.trim().slice(0, 50)) : '';
+  
+  // If no author provided and user is logged in, use their custom author name
+  if (!cleanAuthor && telegramId) {
+    const settings = await getUserSettings(telegramId);
+    cleanAuthor = settings.authorName || req.session.user.name || '';
+  }
 
   // New page
   if (!slug) {

@@ -36,7 +36,7 @@
         
         <div class="input-wrapper" id="authorWrapper">
           <div class="placeholder-text name-placeholder">Your name</div>
-          <input id="author" class="author-input" value="" />
+          <input id="author" class="author-input" value="<%= locals.user && locals.user.authorName ? locals.user.authorName : (locals.user && locals.user.name ? locals.user.name : '') %>" />
         </div>
         
         <div class="input-wrapper story-wrapper" id="storyWrapper">
