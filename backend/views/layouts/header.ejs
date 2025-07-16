@@ -1,3 +1,22 @@
+<!-- Meta tags for social media previews -->
+<meta property="og:site_name" content="Share Me">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:type" content="website">
+
+<!-- These tags will be overridden by specific pages -->
+<meta property="og:title" content="<%= typeof page !== 'undefined' && page.title ? page.title + ' - Share Me' : 'Share Me' %>">
+<meta property="og:description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
+<meta name="description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
+<meta property="og:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : '/images/logo.png' %>">
+<meta name="twitter:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : '/images/logo.png' %>">
+<meta property="og:url" content="<%= typeof currentUrl !== 'undefined' ? currentUrl : '' %>">
+
+<!-- GitHub-specific meta tags -->
+<meta name="github:title" content="<%= typeof page !== 'undefined' && page.title ? page.title + ' - Share Me' : 'Share Me' %>">
+<meta name="github:description" content="<%= typeof page !== 'undefined' && page.description ? page.description : 'Share your stories with the world' %>">
+<meta name="github:image" content="<%= typeof page !== 'undefined' && page.image ? page.image : '/images/logo.png' %>">
+<meta name="github:card" content="summary_large_image">
+
 <!-- Add favicon and logo references -->
 <link rel="icon" href="/images/logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/images/logo.png"> 

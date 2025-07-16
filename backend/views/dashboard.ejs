@@ -5,6 +5,13 @@
   <title>Dashboard - Share Me</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/style.css">
+  <%
+    // Set page data for meta tags
+    const page = {
+      title: 'Dashboard - Share Me',
+      description: `${user.name}'s dashboard - Manage your posts on Share Me`
+    };
+  %>
   <%- include('layouts/header') %>
   <style>
     .dashboard {

@@ -5,6 +5,22 @@
   <title><%= page.title %> - Share Me</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/style.css">
+  <%
+    // Generate description from content
+    let description = '';
+    if (page.content) {
+      // Create a temporary div to extract text from HTML
+      const tempContent = page.content.replace(/<[^>]*>/g, ' ').trim();
+      // Get first 160 characters
+      description = tempContent.substring(0, 160);
+      if (tempContent.length > 160) description += '...';
+    } else {
+      description = `Read "${page.title}" on Share Me`;
+    }
+    
+    // Set page description for meta tags
+    page.description = description;
+  %>
   <%- include('layouts/header') %>
   <style>
     h1 {
@@ -53,6 +69,21 @@
       if (storedToken === '<%= page.editToken %>' || isCreator) {
         editButton.style.display = 'block';
       }
+      
+      // Add click handler for spoilers
+      document.querySelectorAll('.spoiler').forEach(spoiler => {
+        spoiler.addEventListener('click', function() {
+          if (this.dataset.revealed !== 'true') {
+            this.style.backgroundColor = 'rgba(44, 47, 51, 0.1)';
+            this.style.color = 'inherit';
+            this.dataset.revealed = 'true';
+          } else {
+            this.style.backgroundColor = '#2c2f33';
+            this.style.color = 'transparent';
+            this.dataset.revealed = 'false';
+          }
+        });
+      });
     });
   </script>
 </body>

@@ -58,6 +58,8 @@ app.use((req, res, next) => {
 // Make user available to all templates
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  // Add current URL for social media previews
+  res.locals.currentUrl = `${process.env.BASE_URL}${req.originalUrl}`;
   next();
 });
 
