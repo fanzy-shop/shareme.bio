@@ -281,5 +281,16 @@
     });
   </script>
   <script type="module" src="/js/editor.js"></script>
+  <script type="module">
+    import FormatToolbar from '/js/format-toolbar.js';
+    
+    // Initialize the formatting toolbar once the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const editor = document.getElementById('editor');
+      if (editor) {
+        new FormatToolbar(editor);
+      }
+    });
+  </script>
 </body>
 </html> 
