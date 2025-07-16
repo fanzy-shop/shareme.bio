@@ -8,6 +8,7 @@ import { RedisStore } from 'connect-redis';
 import publishRoutes from './routes/publish.js';
 import { router as readRouter, editRouter } from './routes/read.js';
 import authRoutes from './routes/auth.js';
+import sitemapRoutes from './routes/sitemap.js';
 import './utils/telegramBot.js'; // Import to initialize the bot
 import redis from './redis.js'; // Import the existing Redis client
 
@@ -73,7 +74,10 @@ app.use((req, res, next) => {
 // 1. Auth routes first
 app.use(authRoutes);
 
-// 2. Specific routes
+// 2. Sitemap routes (before other routes)
+app.use(sitemapRoutes);
+
+// 3. Specific routes
 app.get('/', (req, res) => res.render('editor', { page: null }));
 app.get('/new', (req, res) => {
   // If user is logged in, pre-fill author name
@@ -81,13 +85,13 @@ app.get('/new', (req, res) => {
   res.render('editor', { page: null, author });
 });
 
-// 3. Edit routes (must come before general slug routes)
+// 4. Edit routes (must come before general slug routes)
 app.use('/edit', editRouter);
 
-// 4. Publish routes
+// 5. Publish routes
 app.use(publishRoutes);
 
-// 5. General read routes (for viewing pages by slug)
+// 6. General read routes (for viewing pages by slug)
 app.use(readRouter);
 
 // Handle 404 errors

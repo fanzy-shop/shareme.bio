@@ -1,0 +1,67 @@
+# Robots.txt for ShareMe.bio
+# Last updated: <%= new Date().toISOString() %>
+
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Allow all public pages
+Allow: /new
+Allow: /dashboard
+Allow: /auth-success
+
+# Disallow private/admin areas
+Disallow: /edit/
+Disallow: /delete-post/
+Disallow: /logout
+Disallow: /auth/
+Disallow: /telegram/
+
+# Disallow temporary or system files
+Disallow: /temp/
+Disallow: /admin/
+Disallow: /api/private/
+
+# Allow important files
+Allow: /sitemap.xml
+Allow: /sitemap-index.xml
+Allow: /robots.txt
+Allow: /css/
+Allow: /js/
+Allow: /images/
+
+# Sitemap location
+Sitemap: https://shareme.bio/sitemap.xml
+Sitemap: https://shareme.bio/sitemap-index.xml
+
+# Crawl delay (be respectful to server)
+Crawl-delay: 1
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: / 
