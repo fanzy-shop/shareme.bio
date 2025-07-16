@@ -22,7 +22,7 @@ app.set('views', path.resolve(__dirname, 'views'));
 
 // Session middleware
 app.use(session({
-  secret: 'shareme-telegraph-clone-secret',
+  secret: process.env.SESSION_SECRET || 'shareme-telegraph-clone-secret',
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -81,7 +81,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Listening on :${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
   console.log(`Base URL: ${process.env.BASE_URL}`);
 }); 

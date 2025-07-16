@@ -38,6 +38,7 @@ Create a `.env` file in the backend directory with:
 ```
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 SESSION_SECRET=your_session_secret
+BASE_URL=https://your-domain.com
 ```
 
 4. Start the server:
@@ -46,6 +47,33 @@ npm start
 ```
 
 The application will be available at `http://localhost:8080`
+
+## Deployment
+
+### Railway
+1. Connect your GitHub repository to Railway
+2. Set the following environment variables:
+   - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token
+   - `SESSION_SECRET`: A secure random string for session encryption
+   - `BASE_URL`: Your Railway app URL (e.g., `https://your-app.railway.app`)
+3. Deploy! Railway will automatically detect the Node.js app and use the `start` script.
+
+### Other Platforms
+The app is configured to work with any Node.js hosting platform:
+- **Vercel**: Use the `start` script
+- **Heroku**: Uses the `start` script automatically
+- **DigitalOcean App Platform**: Configure as Node.js app
+- **Google Cloud Run**: Use the provided Dockerfile or buildpack
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `TELEGRAM_BOT_TOKEN` | Your Telegram bot token for authentication | Yes |
+| `SESSION_SECRET` | Secret key for session encryption | Yes |
+| `BASE_URL` | Your application's base URL | Yes |
+| `PORT` | Port to run the server on (default: 8080) | No |
+| `NODE_ENV` | Environment (production/development) | No |
 
 ## Usage
 
