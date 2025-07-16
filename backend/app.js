@@ -3,10 +3,13 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
+import { createClient } from 'redis';
+import { RedisStore } from 'connect-redis';
 import publishRoutes from './routes/publish.js';
 import { router as readRouter, editRouter } from './routes/read.js';
 import authRoutes from './routes/auth.js';
 import './utils/telegramBot.js'; // Import to initialize the bot
+import redis from './redis.js'; // Import the existing Redis client
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,8 +23,15 @@ process.env.BASE_URL = process.env.BASE_URL || 'https://shareme.bio';
 app.set('view engine', 'ejs');
 app.set('views', path.resolve(__dirname, 'views'));
 
+// Initialize Redis store
+const redisStore = new RedisStore({
+  client: redis,
+  prefix: 'session:'
+});
+
 // Session middleware
 app.use(session({
+  store: redisStore,
   secret: process.env.SESSION_SECRET || 'shareme-telegraph-clone-secret',
   resave: false,
   saveUninitialized: false,

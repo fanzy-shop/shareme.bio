@@ -1,7 +1,7 @@
 import { createClient } from 'redis';
 
 const client = createClient({
-  url: 'redis://default:AJFZvlgmJBkEFBEYrjimvnVUvkvWlkFB@switchback.proxy.rlwy.net:14760'
+  url: 'redis://default:AnraPrxbErJfsNCVZZVNHqNSYdXeqwUa@redis.railway.internal:6379'
 });
 
 client.on('error', err => console.error('Redis error', err));
