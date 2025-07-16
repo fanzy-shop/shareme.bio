@@ -17,7 +17,17 @@ router.get('/sitemap.xml', async (req, res) => {
     
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    res.status(500).send('Error generating sitemap');
+    // Return a basic sitemap instead of error
+    const basicXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${process.env.BASE_URL || 'https://shareme.bio'}/</loc>
+    <priority>1.0</priority>
+    <changefreq>daily</changefreq>
+  </url>
+</urlset>`;
+    res.set('Content-Type', 'application/xml');
+    res.send(basicXml);
   }
 });
 

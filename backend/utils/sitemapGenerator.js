@@ -29,26 +29,47 @@ export class SitemapGenerator {
         xml += '  </url>\n';
       });
       
-      // Add dynamic pages
-      pages.forEach(page => {
-        if (page && page.slug) {
-          const lastmod = page.createdAt ? new Date(parseInt(page.createdAt)).toISOString() : new Date().toISOString();
-          
-          xml += '  <url>\n';
-          xml += `    <loc>${this.baseUrl}/${page.slug}</loc>\n`;
-          xml += `    <lastmod>${lastmod}</lastmod>\n`;
-          xml += '    <priority>0.7</priority>\n';
-          xml += '    <changefreq>monthly</changefreq>\n';
-          xml += '  </url>\n';
-        }
-      });
+      // Add dynamic pages (only if pages exist and are valid)
+      if (pages && Array.isArray(pages)) {
+        pages.forEach(page => {
+          if (page && page.slug) {
+            const lastmod = page.createdAt ? new Date(parseInt(page.createdAt)).toISOString() : new Date().toISOString();
+            
+            xml += '  <url>\n';
+            xml += `    <loc>${this.baseUrl}/${page.slug}</loc>\n`;
+            xml += `    <lastmod>${lastmod}</lastmod>\n`;
+            xml += '    <priority>0.7</priority>\n';
+            xml += '    <changefreq>monthly</changefreq>\n';
+            xml += '  </url>\n';
+          }
+        });
+      }
       
       xml += '</urlset>';
       return xml;
       
     } catch (error) {
       console.error('Error generating sitemap:', error);
-      throw error;
+      // Return a basic sitemap with just static pages
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+      
+      const staticPages = [
+        { url: '/', priority: '1.0', changefreq: 'daily' },
+        { url: '/new', priority: '0.8', changefreq: 'weekly' },
+        { url: '/dashboard', priority: '0.6', changefreq: 'weekly' }
+      ];
+      
+      staticPages.forEach(page => {
+        xml += '  <url>\n';
+        xml += `    <loc>${this.baseUrl}${page.url}</loc>\n`;
+        xml += `    <priority>${page.priority}</priority>\n`;
+        xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+        xml += '  </url>\n';
+      });
+      
+      xml += '</urlset>';
+      return xml;
     }
   }
 
