@@ -3,7 +3,22 @@ import redis from '../redis.js';
 const PAGE_PREFIX = 'page:';    // hash key per page
 const LIST_KEY    = 'pages:list'; // list of slugs (LPUSH order = newest first)
 
+// Helper function to check if Redis is connected
+async function isRedisConnected() {
+  try {
+    await redis.ping();
+    return true;
+  } catch (error) {
+    console.error('Redis not connected:', error);
+    return false;
+  }
+}
+
 export async function savePage({ slug, title, content, author, createdAt, editToken, views = 0, telegramId = null }) {
+  if (!(await isRedisConnected())) {
+    throw new Error('Redis not available');
+  }
+  
   const pageData = {
     title,
     content,
@@ -24,6 +39,10 @@ export async function savePage({ slug, title, content, author, createdAt, editTo
 }
 
 export async function getPage(slug) {
+  if (!(await isRedisConnected())) {
+    return null;
+  }
+  
   const data = await redis.hGetAll(PAGE_PREFIX + slug);
   if (Object.keys(data).length === 0) return null;
   
@@ -32,6 +51,10 @@ export async function getPage(slug) {
 }
 
 export async function updatePage(slug, { title, content, author, views }) {
+  if (!(await isRedisConnected())) {
+    throw new Error('Redis not available');
+  }
+  
   const updateData = {};
   
   if (title !== undefined) updateData.title = title;
@@ -45,6 +68,10 @@ export async function updatePage(slug, { title, content, author, views }) {
 }
 
 export async function deletePage(slug) {
+  if (!(await isRedisConnected())) {
+    throw new Error('Redis not available');
+  }
+  
   // Delete page data from Redis
   await redis.del(PAGE_PREFIX + slug);
   
@@ -55,16 +82,28 @@ export async function deletePage(slug) {
 }
 
 export async function incrementViews(slug) {
+  if (!(await isRedisConnected())) {
+    return; // Silently fail for view increments
+  }
+  
   await redis.hIncrBy(PAGE_PREFIX + slug, 'views', 1);
 }
 
 export async function getRecent(limit = 50) {
+  if (!(await isRedisConnected())) {
+    return []; // Return empty array if Redis not available
+  }
+  
   const slugs = await redis.lRange(LIST_KEY, 0, limit - 1);
   const pages = await Promise.all(slugs.map(getPage));
   return pages.filter(Boolean);
 }
 
 export async function getPagesByTelegramId(telegramId, limit = 50) {
+  if (!(await isRedisConnected())) {
+    return []; // Return empty array if Redis not available
+  }
+  
   // This would need to be implemented differently for efficiency in a real app
   // For example, using a separate index or a user_posts set
   const allPages = await getRecent(1000); // Get a large number of recent pages

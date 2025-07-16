@@ -24,17 +24,27 @@ process.env.BASE_URL = process.env.BASE_URL || 'https://shareme.bio';
 app.set('view engine', 'ejs');
 app.set('views', path.resolve(__dirname, 'views'));
 
-// Initialize Redis store with proper configuration
-const redisStore = new RedisStore({
-  client: redis,
-  prefix: 'session:',
-  disableTouch: false, // Enable touch to keep sessions alive
-  ttl: 86400 // 1 day in seconds
-});
+// Session configuration with Redis fallback
+let sessionStore;
+try {
+  // Try to use Redis store
+  const redisStore = new RedisStore({
+    client: redis,
+    prefix: 'session:',
+    disableTouch: false, // Enable touch to keep sessions alive
+    ttl: 86400 // 1 day in seconds
+  });
+  sessionStore = redisStore;
+  console.log('Using Redis session store');
+} catch (error) {
+  console.error('Redis session store failed, using memory store:', error);
+  // Fallback to memory store
+  sessionStore = undefined; // Will use default memory store
+}
 
 // Session middleware with proper configuration
 app.use(session({
-  store: redisStore,
+  store: sessionStore,
   secret: process.env.SESSION_SECRET || 'shareme-telegraph-clone-secret',
   resave: false,
   saveUninitialized: false,

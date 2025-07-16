@@ -11,34 +11,13 @@ const client = createClient({
 
 client.on('error', err => console.error('Redis error', err));
 
-// Initialize connection
-let isConnected = false;
-
-async function connect() {
-  if (!isConnected) {
-    try {
-      await client.connect();
-      isConnected = true;
-      console.log('Connected to Redis');
-    } catch (err) {
-      console.error('Failed to connect to Redis:', err);
-      throw err;
-    }
-  }
-  return client;
+// Connect to Redis
+try {
+  await client.connect();
+  console.log('Connected to Redis');
+} catch (err) {
+  console.error('Failed to connect to Redis:', err);
+  // Don't throw error, let the app continue without Redis
 }
 
-// Auto-connect on first use
-const redisClient = new Proxy(client, {
-  get(target, prop) {
-    if (!isConnected && typeof target[prop] === 'function') {
-      return async function(...args) {
-        await connect();
-        return target[prop].apply(target, args);
-      };
-    }
-    return target[prop];
-  }
-});
-
-export default redisClient; 
+export default client; 
