@@ -39,8 +39,19 @@ router.get('/auth/:token', async (req, res) => {
     
     console.log(`Authentication successful for user: ${user.name}`);
     
-    // Redirect to dashboard
-    res.redirect('/dashboard');
+    // Save the session explicitly before redirecting
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).render('error', {
+          message: 'An error occurred while saving your session. Please try again.'
+        });
+      }
+      
+      console.log('Session saved successfully');
+      // Redirect to dashboard
+      res.redirect('/dashboard');
+    });
   } catch (error) {
     console.error('Authentication error:', error);
     res.status(500).render('error', {
@@ -52,6 +63,10 @@ router.get('/auth/:token', async (req, res) => {
 // Dashboard route
 router.get('/dashboard', async (req, res) => {
   try {
+    // Debug session data
+    console.log('Dashboard route - Session ID:', req.sessionID);
+    console.log('Dashboard route - Session data:', req.session);
+    
     // Check if user is logged in
     if (!req.session.user) {
       console.log('Dashboard access denied: Not logged in');

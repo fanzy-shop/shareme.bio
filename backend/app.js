@@ -23,26 +23,37 @@ process.env.BASE_URL = process.env.BASE_URL || 'https://shareme.bio';
 app.set('view engine', 'ejs');
 app.set('views', path.resolve(__dirname, 'views'));
 
-// Initialize Redis store
+// Initialize Redis store with proper configuration
 const redisStore = new RedisStore({
   client: redis,
-  prefix: 'session:'
+  prefix: 'session:',
+  disableTouch: false, // Enable touch to keep sessions alive
+  ttl: 86400 // 1 day in seconds
 });
 
-// Session middleware
+// Session middleware with proper configuration
 app.use(session({
   store: redisStore,
   secret: process.env.SESSION_SECRET || 'shareme-telegraph-clone-secret',
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to true only if using HTTPS
+    httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
   }
 }));
 
+// Body parser and static middleware
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Debug middleware to log session data
+app.use((req, res, next) => {
+  console.log('Session ID:', req.sessionID);
+  console.log('Session User:', req.session.user);
+  next();
+});
 
 // Make user available to all templates
 app.use((req, res, next) => {
