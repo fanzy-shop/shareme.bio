@@ -12,8 +12,8 @@
       `Edit your post "${page.title}" on Share Me` : 
       'Create and share your story with the world on Share Me';
     
-    // Create a page object if it doesn't exist
-    if (typeof page === 'undefined') {
+    // Create a page object if it doesn't exist or is null
+    if (!page) {
       var page = {};
     }
     
