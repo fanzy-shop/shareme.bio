@@ -41,6 +41,11 @@ async function addPostToUser(telegramId, slug) {
   await redis.sAdd(USER_POSTS_PREFIX + telegramId, slug);
 }
 
+// Remove post from user's posts list
+async function removePostFromUser(telegramId, slug) {
+  await redis.sRem(USER_POSTS_PREFIX + telegramId, slug);
+}
+
 // Get user's posts
 async function getUserPosts(telegramId) {
   return await redis.sMembers(USER_POSTS_PREFIX + telegramId);
@@ -233,6 +238,7 @@ export {
   saveUser,
   getUser,
   addPostToUser,
+  removePostFromUser,
   getUserPosts,
   generateAuthToken,
   verifyAuthToken

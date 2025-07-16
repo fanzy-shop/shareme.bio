@@ -44,6 +44,16 @@ export async function updatePage(slug, { title, content, author, views }) {
   }
 }
 
+export async function deletePage(slug) {
+  // Delete page data from Redis
+  await redis.del(PAGE_PREFIX + slug);
+  
+  // Remove slug from the list of pages
+  await redis.lRem(LIST_KEY, 0, slug);
+  
+  return true;
+}
+
 export async function incrementViews(slug) {
   await redis.hIncrBy(PAGE_PREFIX + slug, 'views', 1);
 }

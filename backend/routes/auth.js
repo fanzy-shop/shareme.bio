@@ -1,6 +1,6 @@
 import express from 'express';
-import { verifyAuthToken, getUser, getUserPosts } from '../utils/telegramBot.js';
-import { getPage } from '../models/pageStore.js';
+import { verifyAuthToken, getUser, getUserPosts, removePostFromUser } from '../utils/telegramBot.js';
+import { getPage, deletePage } from '../models/pageStore.js';
 
 const router = express.Router();
 
@@ -102,6 +102,53 @@ router.get('/dashboard', async (req, res) => {
     console.error('Dashboard error:', error);
     res.status(500).render('error', {
       message: 'An error occurred while loading your dashboard. Please try again.'
+    });
+  }
+});
+
+// Delete post route
+router.post('/delete-post/:slug', async (req, res) => {
+  try {
+    // Check if user is logged in
+    if (!req.session.user) {
+      console.log('Delete post access denied: Not logged in');
+      return res.status(401).json({ success: false, message: 'Not logged in' });
+    }
+    
+    const slug = req.params.slug;
+    const telegramId = req.session.user.telegramId;
+    
+    console.log(`Delete request for post ${slug} by user ${telegramId}`);
+    
+    // Get the page
+    const page = await getPage(slug);
+    
+    if (!page) {
+      console.log(`Delete failed: Post ${slug} not found`);
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+    
+    // Check if user is the original creator
+    if (page.telegramId !== telegramId) {
+      console.log(`Delete access denied: User ${telegramId} is not the creator of post ${slug}`);
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    // Delete the page
+    await deletePage(slug);
+    
+    // Remove the post from user's posts list
+    await removePostFromUser(telegramId, slug);
+    
+    console.log(`Post ${slug} deleted successfully`);
+    
+    // Return success
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`Error deleting post ${req.params.slug}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'An error occurred while deleting the post' 
     });
   }
 });
