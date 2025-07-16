@@ -149,6 +149,29 @@ class FormatToolbar {
     this.editor.addEventListener('mouseup', this.handleTextSelection.bind(this));
     this.editor.addEventListener('keyup', this.handleTextSelection.bind(this));
     
+    // Prevent default context menu and show our toolbar instead
+    this.editor.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      
+      // Get selection
+      const selection = window.getSelection();
+      
+      // If no text is selected, select the word under cursor
+      if (selection.isCollapsed) {
+        this.selectWordUnderCursor(e);
+      }
+      
+      // Show the toolbar at cursor position
+      const rect = {
+        left: e.clientX - 5,
+        top: e.clientY - 5,
+        width: 10,
+        height: 10
+      };
+      
+      this.showToolbar(rect);
+    });
+    
     // Hide toolbar when clicking outside
     document.addEventListener('mousedown', (e) => {
       if (!this.toolbar.contains(e.target) && e.target !== this.toolbar && !this.linkDialog.contains(e.target)) {
@@ -526,6 +549,53 @@ class FormatToolbar {
     if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'Z')) {
       e.preventDefault();
       this.redo();
+    }
+  }
+
+  // Helper method to select the word under cursor
+  selectWordUnderCursor(e) {
+    const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+    if (!range) return;
+    
+    // Expand the range to select the word
+    const startNode = range.startContainer;
+    const startOffset = range.startOffset;
+    
+    // Only proceed if we're in a text node
+    if (startNode.nodeType === Node.TEXT_NODE) {
+      const text = startNode.textContent;
+      
+      // Find word boundaries
+      let startWordOffset = startOffset;
+      let endWordOffset = startOffset;
+      
+      // Find start of word
+      while (startWordOffset > 0 && !/\s/.test(text[startWordOffset - 1])) {
+        startWordOffset--;
+      }
+      
+      // Find end of word
+      while (endWordOffset < text.length && !/\s/.test(text[endWordOffset])) {
+        endWordOffset++;
+      }
+      
+      // Create a new range for the word
+      const wordRange = document.createRange();
+      wordRange.setStart(startNode, startWordOffset);
+      wordRange.setEnd(startNode, endWordOffset);
+      
+      // Select the word
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(wordRange);
+      
+      // Save the selection
+      this.selection = {
+        startContainer: wordRange.startContainer,
+        startOffset: wordRange.startOffset,
+        endContainer: wordRange.endContainer,
+        endOffset: wordRange.endOffset
+      };
     }
   }
 }
