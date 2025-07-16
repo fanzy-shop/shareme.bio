@@ -9,6 +9,7 @@ class FormatToolbar {
     this.createToolbar();
     this.createLinkDialog();
     this.setupEventListeners();
+    this.setupUndoRedo();
   }
   
   createToolbar() {
@@ -51,7 +52,7 @@ class FormatToolbar {
     });
     
     const clearButton = this.createButton('Clear formatting', 'Ctrl+Shift+N', () => {
-      document.execCommand('removeFormat', false, null);
+      this.clearFormatting();
     });
     
     linksSection.appendChild(linkButton);
@@ -158,6 +159,228 @@ class FormatToolbar {
     
     // Add keyboard shortcuts
     this.editor.addEventListener('keydown', this.handleKeyboardShortcuts.bind(this));
+    
+    // Add click handler for spoilers in the editor
+    this.editor.addEventListener('click', (e) => {
+      if (e.target.classList.contains('spoiler') || e.target.closest('.spoiler')) {
+        const spoiler = e.target.classList.contains('spoiler') ? e.target : e.target.closest('.spoiler');
+        this.toggleSpoiler(spoiler);
+      }
+    });
+  }
+  
+  // Setup undo/redo functionality
+  setupUndoRedo() {
+    // Store initial content
+    this.lastContent = this.editor.innerHTML;
+    this.undoStack = [this.lastContent];
+    this.redoStack = [];
+    this.isUndoRedo = false;
+    
+    // Monitor content changes
+    this.editor.addEventListener('input', () => {
+      if (!this.isUndoRedo) {
+        const currentContent = this.editor.innerHTML;
+        if (currentContent !== this.lastContent) {
+          this.undoStack.push(currentContent);
+          this.redoStack = [];
+          this.lastContent = currentContent;
+        }
+      }
+    });
+  }
+  
+  // Perform undo operation
+  undo() {
+    if (this.undoStack.length > 1) {
+      this.isUndoRedo = true;
+      this.redoStack.push(this.undoStack.pop());
+      this.lastContent = this.undoStack[this.undoStack.length - 1];
+      this.editor.innerHTML = this.lastContent;
+      this.isUndoRedo = false;
+    }
+  }
+  
+  // Perform redo operation
+  redo() {
+    if (this.redoStack.length > 0) {
+      this.isUndoRedo = true;
+      const content = this.redoStack.pop();
+      this.undoStack.push(content);
+      this.lastContent = content;
+      this.editor.innerHTML = content;
+      this.isUndoRedo = false;
+    }
+  }
+  
+  // Toggle spoiler visibility
+  toggleSpoiler(spoilerElement) {
+    if (spoilerElement.dataset.revealed !== 'true') {
+      spoilerElement.style.backgroundColor = 'rgba(44, 47, 51, 0.1)';
+      spoilerElement.style.color = 'inherit';
+      spoilerElement.dataset.revealed = 'true';
+    } else {
+      spoilerElement.style.backgroundColor = '#2c2f33';
+      spoilerElement.style.color = 'transparent';
+      spoilerElement.dataset.revealed = 'false';
+    }
+  }
+  
+  applySpoiler() {
+    // Custom implementation for spoiler since it's not a standard command
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      
+      // Create spoiler span
+      const spoilerSpan = document.createElement('span');
+      spoilerSpan.className = 'spoiler';
+      spoilerSpan.style.backgroundColor = '#2c2f33';
+      spoilerSpan.style.color = 'transparent';
+      spoilerSpan.style.cursor = 'pointer';
+      spoilerSpan.dataset.spoiler = 'true';
+      spoilerSpan.dataset.revealed = 'false';
+      
+      // Extract selection content and put it in the span
+      spoilerSpan.appendChild(range.extractContents());
+      range.insertNode(spoilerSpan);
+    }
+  }
+  
+  // Enhanced clear formatting that handles all elements
+  clearFormatting() {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      
+      // First try the standard removeFormat command
+      document.execCommand('removeFormat', false, null);
+      
+      // Get the current selection again after the removeFormat command
+      const currentRange = selection.getRangeAt(0);
+      const fragment = currentRange.extractContents();
+      
+      // Process the fragment to remove all formatting
+      const div = document.createElement('div');
+      div.appendChild(fragment.cloneNode(true));
+      
+      // Specifically remove all formatting types
+      this.removeSpecificFormatting(div);
+      
+      // Insert the cleaned content
+      const cleanFragment = document.createDocumentFragment();
+      while (div.firstChild) {
+        cleanFragment.appendChild(div.firstChild);
+      }
+      
+      currentRange.insertNode(cleanFragment);
+      
+      // Position cursor at the end
+      currentRange.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(currentRange);
+    }
+  }
+  
+  // Helper method to remove specific formatting types
+  removeSpecificFormatting(element) {
+    // Process all child nodes recursively
+    const processNode = (node) => {
+      // Skip if not an element
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return node;
+      }
+      
+      const nodeName = node.nodeName.toLowerCase();
+      
+      // Handle block-level formatting (quotes, pre/monospace)
+      if (nodeName === 'blockquote' || nodeName === 'pre') {
+        const fragment = document.createDocumentFragment();
+        while (node.firstChild) {
+          const child = node.firstChild;
+          node.removeChild(child);
+          // Process child nodes recursively
+          if (child.nodeType === Node.ELEMENT_NODE) {
+            processNode(child);
+          }
+          fragment.appendChild(child);
+        }
+        node.parentNode.replaceChild(fragment, node);
+        return null;
+      }
+      
+      // Handle inline formatting (bold, italic, underline, strike, spoiler)
+      if (nodeName === 'b' || nodeName === 'strong' || 
+          nodeName === 'i' || nodeName === 'em' ||
+          nodeName === 'u' || nodeName === 's' || 
+          nodeName === 'strike' || nodeName === 'del') {
+        const fragment = document.createDocumentFragment();
+        while (node.firstChild) {
+          const child = node.firstChild;
+          node.removeChild(child);
+          // Process child nodes recursively
+          if (child.nodeType === Node.ELEMENT_NODE) {
+            processNode(child);
+          }
+          fragment.appendChild(child);
+        }
+        node.parentNode.replaceChild(fragment, node);
+        return null;
+      }
+      
+      // Handle spoiler spans
+      if ((nodeName === 'span' && node.classList.contains('spoiler')) || 
+          node.dataset.spoiler === 'true') {
+        const fragment = document.createDocumentFragment();
+        while (node.firstChild) {
+          const child = node.firstChild;
+          node.removeChild(child);
+          // Process child nodes recursively
+          if (child.nodeType === Node.ELEMENT_NODE) {
+            processNode(child);
+          }
+          fragment.appendChild(child);
+        }
+        node.parentNode.replaceChild(fragment, node);
+        return null;
+      }
+      
+      // Handle links
+      if (nodeName === 'a') {
+        const fragment = document.createDocumentFragment();
+        while (node.firstChild) {
+          const child = node.firstChild;
+          node.removeChild(child);
+          // Process child nodes recursively
+          if (child.nodeType === Node.ELEMENT_NODE) {
+            processNode(child);
+          }
+          fragment.appendChild(child);
+        }
+        node.parentNode.replaceChild(fragment, node);
+        return null;
+      }
+      
+      // Process all children for other elements
+      const childNodes = Array.from(node.childNodes);
+      for (let i = 0; i < childNodes.length; i++) {
+        const child = childNodes[i];
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          processNode(child);
+        }
+      }
+      
+      return node;
+    };
+    
+    // Process all children of the element
+    const childNodes = Array.from(element.childNodes);
+    for (let i = 0; i < childNodes.length; i++) {
+      const child = childNodes[i];
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        processNode(child);
+      }
+    }
   }
   
   handleTextSelection() {
@@ -229,39 +452,6 @@ class FormatToolbar {
     this.linkDialog.classList.remove('show');
   }
   
-  applySpoiler() {
-    // Custom implementation for spoiler since it's not a standard command
-    const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      
-      // Create spoiler span
-      const spoilerSpan = document.createElement('span');
-      spoilerSpan.className = 'spoiler';
-      spoilerSpan.style.backgroundColor = '#2c2f33';
-      spoilerSpan.style.color = 'transparent';
-      spoilerSpan.style.cursor = 'pointer';
-      spoilerSpan.dataset.spoiler = 'true';
-      
-      // Extract selection content and put it in the span
-      spoilerSpan.appendChild(range.extractContents());
-      range.insertNode(spoilerSpan);
-      
-      // Add click event to reveal spoiler
-      spoilerSpan.addEventListener('click', function() {
-        if (this.dataset.revealed !== 'true') {
-          this.style.backgroundColor = 'rgba(44, 47, 51, 0.1)';
-          this.style.color = 'inherit';
-          this.dataset.revealed = 'true';
-        } else {
-          this.style.backgroundColor = '#2c2f33';
-          this.style.color = 'transparent';
-          this.dataset.revealed = 'false';
-        }
-      });
-    }
-  }
-  
   handleKeyboardShortcuts(e) {
     // Bold: Ctrl+B
     if (e.ctrlKey && e.key === 'b') {
@@ -323,7 +513,19 @@ class FormatToolbar {
     // Clear formatting: Ctrl+Shift+N
     if (e.ctrlKey && e.shiftKey && e.key === 'N') {
       e.preventDefault();
-      document.execCommand('removeFormat', false, null);
+      this.clearFormatting();
+    }
+    
+    // Undo: Ctrl+Z
+    if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      this.undo();
+    }
+    
+    // Redo: Ctrl+Y or Ctrl+Shift+Z
+    if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'Z')) {
+      e.preventDefault();
+      this.redo();
     }
   }
 }
