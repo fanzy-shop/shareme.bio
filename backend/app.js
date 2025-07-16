@@ -1,0 +1,87 @@
+import express from 'express';
+import bodyParser from 'body-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import session from 'express-session';
+import publishRoutes from './routes/publish.js';
+import { router as readRouter, editRouter } from './routes/read.js';
+import authRoutes from './routes/auth.js';
+import './utils/telegramBot.js'; // Import to initialize the bot
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// Set base URL for the application
+process.env.BASE_URL = process.env.BASE_URL || 'https://shareme.bio';
+
+app.set('view engine', 'ejs');
+app.set('views', path.resolve(__dirname, 'views'));
+
+// Session middleware
+app.use(session({
+  secret: 'shareme-telegraph-clone-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
+  }
+}));
+
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Make user available to all templates
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
+});
+
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+// Apply routes in correct order
+// 1. Auth routes first
+app.use(authRoutes);
+
+// 2. Specific routes
+app.get('/', (req, res) => res.render('editor', { page: null }));
+app.get('/new', (req, res) => {
+  // If user is logged in, pre-fill author name
+  const author = req.session.user ? req.session.user.name : '';
+  res.render('editor', { page: null, author });
+});
+
+// 3. Edit routes (must come before general slug routes)
+app.use('/edit', editRouter);
+
+// 4. Publish routes
+app.use(publishRoutes);
+
+// 5. General read routes (for viewing pages by slug)
+app.use(readRouter);
+
+// Handle 404 errors
+app.use((req, res) => {
+  console.log(`404 Not Found: ${req.method} ${req.url}`);
+  res.status(404).render('404');
+});
+
+// Handle server errors
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).render('error', {
+    message: 'An unexpected error occurred. Please try again later.'
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Listening on :${PORT}`);
+  console.log(`Base URL: ${process.env.BASE_URL}`);
+}); 

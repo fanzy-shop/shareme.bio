@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title><%= page.title %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    h1 {
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <% if (page && page.slug && page.editToken) { %>
+  <a href="/edit/<%= page.slug %>/<%= page.editToken %>" class="edit-btn" id="editButton" style="display: none;">EDIT</a>
+  <% } %>
+  
+  <div class="container">
+    <article>
+      <h1><%= page.title %></h1>
+      <div class="author">
+        <% if (page.author) { %><%= page.author %> • <% } %>
+        <% const date = new Date(parseInt(page.createdAt)); %>
+        <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
+        <%= date.toLocaleDateString('en-US', options) %>
+      </div>
+      <hr>
+      <div><%- page.content %></div>
+    </article>
+  </div>
+
+  <% if (typeof isOriginalCreator !== 'undefined' && isOriginalCreator) { %>
+  <div id="creatorData" data-is-creator="true" style="display: none;"></div>
+  <% } else { %>
+  <div id="creatorData" data-is-creator="false" style="display: none;"></div>
+  <% } %>
+
+  <script>
+    // Check if the user has the edit token in localStorage or is the original creator
+    document.addEventListener('DOMContentLoaded', function() {
+      const slug = '<%= page.slug %>';
+      const storedToken = localStorage.getItem('editToken_' + slug);
+      const editButton = document.getElementById('editButton');
+      
+      if (!editButton) return; // Exit if edit button doesn't exist
+      
+      const creatorData = document.getElementById('creatorData');
+      const isCreator = creatorData.getAttribute('data-is-creator') === 'true';
+      
+      // Show edit button if user has the token or is the original creator
+      if (storedToken === '<%= page.editToken %>' || isCreator) {
+        editButton.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html> 

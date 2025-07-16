@@ -1,0 +1,339 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  color: #222;
+  line-height: 1.6;
+  margin: 0;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  padding: 21px 0;
+  width: 100%;
+  flex-grow: 1;
+  box-sizing: border-box;
+}
+
+/* Common button style for all buttons */
+.button,
+.publish-btn, 
+.edit-btn,
+button[type="submit"],
+.image-upload-btn,
+a.button {
+  display: inline-block;
+  background: transparent;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 16px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.button:hover,
+.publish-btn:hover, 
+.edit-btn:hover,
+button[type="submit"]:hover,
+.image-upload-btn:hover,
+a.button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Fixed position buttons */
+.publish-btn, .edit-btn {
+  position: fixed;
+  top: 21px;
+  right: 20px;
+  z-index: 10;
+}
+
+.edit-btn {
+  right: 120px; /* Position dashboard button to the left of publish */
+}
+
+.editor-main {
+  padding: 0 20px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.content-area {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Input wrapper and placeholder animations */
+.input-wrapper {
+  position: relative;
+  margin-bottom: 15px;
+  border-left: 0px solid transparent;
+  padding-left: 0;
+  transition: border-left 0.2s ease, padding-left 0.2s ease;
+}
+
+/* Only apply border to non-story wrappers */
+.input-wrapper:not(.story-wrapper).has-text {
+  border-left: 2px solid #ccc;
+  padding-left: 10px;
+}
+
+.input-wrapper:not(.story-wrapper).focused.has-text {
+  border-left: 2px solid #999;
+}
+
+/* When both title and author have text, combine their left borders */
+.input-wrapper:not(.story-wrapper).has-text + .input-wrapper:not(.story-wrapper).has-text {
+  border-top: none;
+  margin-top: -15px;
+  padding-top: 0;
+}
+
+/* Remove all borders for story wrapper */
+.story-wrapper {
+  border-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.placeholder-text {
+  position: absolute;
+  color: #999;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+  left: 0;
+  top: 0;
+  line-height: 1;
+}
+
+.title-placeholder {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.name-placeholder {
+  font-size: 18px;
+  font-weight: normal;
+  margin-top: 25px; /* Align with the input */
+}
+
+.story-placeholder {
+  font-size: 18px;
+  font-weight: normal;
+  margin-top: 10px; /* Align with the editor */
+}
+
+.input-wrapper.has-text .placeholder-text {
+  transform: translateX(-100%) translateX(-15px);
+  color: #777;
+}
+
+.input-wrapper.has-text .title-placeholder {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.input-wrapper.has-text .name-placeholder {
+  font-size: 18px;
+  font-weight: normal;
+}
+
+/* Make story placeholder completely disappear */
+.input-wrapper.has-text .story-placeholder {
+  opacity: 0;
+}
+
+.story-wrapper {
+  margin-top: 10px;
+}
+
+input, textarea {
+  border: 0;
+  outline: 0;
+  font: inherit;
+  padding: 0;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+}
+
+.title-input {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  color: #333;
+  width: 100%;
+  white-space: normal; /* Allow line breaks */
+  word-wrap: break-word;
+  line-height: 1;
+  min-height: 32px;
+}
+
+.author-input {
+  font-size: 18px;
+  color: #333;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  width: 100%;
+  line-height: 1;
+}
+
+.editor {
+  min-height: 300px;
+  color: #333;
+  outline: none;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 18px;
+  line-height: 1.6;
+  position: relative;
+}
+
+/* Editor toolbar */
+.editor-toolbar {
+  position: absolute;
+  padding: 5px;
+  display: none;
+  align-items: center;
+  background-color: transparent;
+  z-index: 100;
+  margin-top: -2px; /* Align with text */
+}
+
+.editor-toolbar.visible {
+  display: inline-flex;
+}
+
+/* Special styling for image upload button */
+.image-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Image styling for both editor and published posts */
+.editor-image,
+.editor img,
+article img {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 20px auto;
+  max-width: 750px;
+  cursor: pointer; /* Make images appear clickable/selectable */
+}
+
+/* Remove the default placeholder since we're using our custom one */
+.editor[contenteditable=true]:empty:before {
+  content: "";
+}
+
+article {
+  padding: 0 20px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 15px 0;
+  word-wrap: break-word;
+  line-height: 1;
+}
+
+a {
+  color: #0088cc;
+  text-decoration: none;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 20px 0;
+}
+
+button {
+  display: inline-block; /* Make buttons visible */
+}
+
+.button-group {
+  margin-top: 20px;
+}
+
+.button-group .button {
+  margin-right: 10px;
+}
+
+.author {
+  color: #999;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 800px) {
+  .editor-main {
+    flex-direction: column;
+    padding-top: 45px; /* Add space at the top for buttons in editor view */
+  }
+  
+  .content-area {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  /* Make all placeholders completely disappear on mobile when text is entered */
+  .input-wrapper.has-text .placeholder-text {
+    opacity: 0;
+    transform: none;
+  }
+  
+  /* Make story placeholder completely disappear on mobile too */
+  .input-wrapper.has-text .story-placeholder {
+    opacity: 0;
+  }
+  
+  .title-input, .author-input {
+    width: 100%;
+  }
+  
+  .publish-btn, .edit-btn {
+    top: 15px;
+  }
+  
+  .publish-btn {
+    right: 15px;
+  }
+  
+  .edit-btn {
+    right: 115px;
+  }
+  
+  /* Adjust image size on mobile for both editor and published posts */
+  .editor-image,
+  .editor img,
+  article img {
+    width: 100%;
+    max-width: 100%;
+  }
+} 

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard - Shareme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .dashboard {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .account-info {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 5px;
+    }
+    .post-list {
+      list-style: none;
+      padding: 0;
+    }
+    .post-item {
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .post-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .post-views {
+      color: #999;
+      font-size: 14px;
+    }
+    .button {
+      display: inline-block;
+      background: transparent;
+      color: #000;
+      border: 2px solid #000;
+      border-radius: 16px;
+      padding: 5px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-right: 10px;
+      text-decoration: none;
+    }
+    .button-group {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="account-info">
+      <h1>My Account</h1>
+      <p>This is your current Shareme.bio account:</p>
+      <p><strong><%= user.name %></strong></p>
+      <p>Author: <%= user.name %></p>
+      <p><%= posts.length %> posts</p>
+      
+      <div class="button-group">
+        <a href="/new" class="button">New Post</a>
+        <a href="/logout" class="button">Logout</a>
+      </div>
+    </div>
+    
+    <h2>My Posts</h2>
+    <% if (posts.length === 0) { %>
+      <p>You haven't created any posts yet.</p>
+    <% } else { %>
+      <ul class="post-list">
+        <% posts.forEach((post, index) => { %>
+          <li class="post-item">
+            <div class="post-title">
+              <%= index + 1 %>. <a href="/<%= post.slug %>"><%= post.title %></a>
+            </div>
+            <div class="post-views">
+              <%= post.views %> views
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </div>
+</body>
+</html> 
