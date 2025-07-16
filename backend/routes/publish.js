@@ -18,10 +18,8 @@ router.post('/publish', async (req, res) => {
 
   // New page
   if (!slug) {
-    // Generate slug from title with a random suffix for uniqueness
-    const titleSlug = slugify(cleanTitle);
-    const randomSuffix = nanoid(4);
-    const newSlug = `${titleSlug}-${randomSuffix}`;
+    // Generate short 10-character slug for all URLs
+    const newSlug = nanoid(10);
     const newToken = nanoid(16);
     
     const pageData = { 
