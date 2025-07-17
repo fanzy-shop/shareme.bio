@@ -276,9 +276,18 @@ bot.action(/confirm_delete_(.+)/, async (ctx) => {
     
     await ctx.answerCbQuery('Post deleted successfully!');
     
-    // Go back to posts list
-    ctx.callbackQuery.data = 'my_posts';
-    await bot.handleAction(ctx);
+    // Show success message with back button
+    await ctx.editMessageText(
+      `✅ Post deleted successfully!\n\nThe post has been permanently removed from your account.`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '⬅️ Back to My Posts', callback_data: 'my_posts' }],
+            [{ text: '🏠 Back to My Account', callback_data: 'my_account' }]
+          ]
+        }
+      }
+    );
     
   } catch (error) {
     console.error('Error in confirm_delete action:', error);
@@ -399,8 +408,19 @@ bot.action('use_telegram_name', async (ctx) => {
     await saveUserSettings(id, { authorName: telegramName });
     await redis.del(`user_state_${id}`);
     
+    // Update website session if user is logged in
+    const user = await getUser(id);
+    if (user) {
+      // Store updated user info in session for website sync
+      await redis.set(`session_user_${id}`, JSON.stringify({
+        telegramId: id,
+        name: user.name,
+        authorName: telegramName
+      }), { EX: 86400 }); // 24 hours
+    }
+    
     await ctx.editMessageText(
-      `✅ Author name updated!\n\nNew author name: ${telegramName}`,
+      `✅ Author name updated!\n\nNew author name: ${telegramName}\n\nThis change will be reflected on the website when you log in.`,
       {
         reply_markup: {
           inline_keyboard: [
@@ -503,8 +523,19 @@ bot.on('text', async (ctx) => {
       await saveUserSettings(id, { authorName: newAuthorName });
       await redis.del(`user_state_${id}`);
       
+      // Update website session if user is logged in
+      const user = await getUser(id);
+      if (user) {
+        // Store updated user info in session for website sync
+        await redis.set(`session_user_${id}`, JSON.stringify({
+          telegramId: id,
+          name: user.name,
+          authorName: newAuthorName
+        }), { EX: 86400 }); // 24 hours
+      }
+      
       await ctx.reply(
-        `✅ Author name updated!\n\nNew author name: ${newAuthorName}`,
+        `✅ Author name updated!\n\nNew author name: ${newAuthorName}\n\nThis change will be reflected on the website when you log in.`,
         {
           reply_markup: {
             inline_keyboard: [

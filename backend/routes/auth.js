@@ -1,6 +1,7 @@
 import express from 'express';
 import { verifyAuthToken, getUser, getUserPosts, removePostFromUser, getUserSettings } from '../utils/telegramBot.js';
 import { getPage, deletePage } from '../models/pageStore.js';
+import redis from '../redis.js';
 
 const router = express.Router();
 
@@ -35,14 +36,31 @@ router.get('/auth/:token', async (req, res) => {
     const settings = await getUserSettings(telegramId);
     const authorName = settings.authorName || user.name;
     
+    // Check if there's updated session data from bot
+    const sessionUserData = await redis.get(`session_user_${telegramId}`);
+    let finalAuthorName = authorName;
+    
+    if (sessionUserData) {
+      try {
+        const sessionData = JSON.parse(sessionUserData);
+        if (sessionData.authorName) {
+          finalAuthorName = sessionData.authorName;
+          // Clear the session data after using it
+          await redis.del(`session_user_${telegramId}`);
+        }
+      } catch (error) {
+        console.error('Error parsing session user data:', error);
+      }
+    }
+    
     // Store user info in session with custom author name
     req.session.user = {
       telegramId,
       name: user.name,
-      authorName: authorName
+      authorName: finalAuthorName
     };
     
-    console.log(`Authentication successful for user: ${user.name} (Author: ${authorName})`);
+    console.log(`Authentication successful for user: ${user.name} (Author: ${finalAuthorName})`);
     
     // Save the session explicitly before redirecting
     req.session.save((err) => {
@@ -56,7 +74,7 @@ router.get('/auth/:token', async (req, res) => {
       console.log('Session saved successfully');
       // Render success page with popup instead of redirecting
       res.render('auth-success', {
-        user: { ...user, authorName },
+        user: { ...user, authorName: finalAuthorName },
         redirectUrl: '/dashboard'
       });
     });
