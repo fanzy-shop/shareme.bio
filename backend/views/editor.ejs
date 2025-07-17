@@ -77,11 +77,11 @@
     if (pageAuthor) {
       authorInput.value = pageAuthor;
       authorWrapper.classList.add('has-text');
-    } else if (userName) {
-      authorInput.value = userName;
-      authorWrapper.classList.add('has-text');
     } else if (authorParam) {
       authorInput.value = authorParam;
+      authorWrapper.classList.add('has-text');
+    } else if (userName) {
+      authorInput.value = userName;
       authorWrapper.classList.add('has-text');
     } else if (localStorage.getItem('author')) {
       authorInput.value = localStorage.getItem('author');
