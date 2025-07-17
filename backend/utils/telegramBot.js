@@ -144,10 +144,25 @@ bot.start(async (ctx) => {
 // Handle "My posts" button click
 bot.action('my_posts', async (ctx) => {
   try {
-    // Answer the callback query to stop loading animation
-    await ctx.answerCbQuery();
-    
     const { id } = ctx.from;
+    
+    // Check if user is on cooldown (rate limiting)
+    const lastRefresh = await redis.get(`refresh_cooldown_${id}`);
+    const now = Date.now();
+    
+    if (lastRefresh && (now - parseInt(lastRefresh)) < 5000) {
+      // Still on cooldown
+      const remainingTime = Math.ceil((5000 - (now - parseInt(lastRefresh))) / 1000);
+      await ctx.answerCbQuery(`Please wait ${remainingTime} seconds before refreshing again.`);
+      return;
+    }
+    
+    // Set cooldown
+    await redis.set(`refresh_cooldown_${id}`, now, { EX: 10 }); // 10 seconds expiry
+    
+    // Answer the callback query to stop loading animation
+    await ctx.answerCbQuery('Refreshing...');
+    
     const fullName = getFullName(ctx.from);
     const settings = await getUserSettings(id);
     const authorName = settings.authorName || fullName;
@@ -160,7 +175,7 @@ bot.action('my_posts', async (ctx) => {
       await ctx.editMessageText('You have no posts yet.', {
         reply_markup: {
           inline_keyboard: [
-            [{ text: '🔄 Auto-refresh (5s)', callback_data: 'my_posts_auto' }],
+            [{ text: '🔄 Refresh', callback_data: 'my_posts' }],
             [{ text: '⬅️ Back to My Account', callback_data: 'my_account' }]
           ]
         }
@@ -187,7 +202,7 @@ bot.action('my_posts', async (ctx) => {
     });
     
     keyboard.push([
-      { text: '🔄 Auto-refresh (5s)', callback_data: 'my_posts_auto' },
+      { text: '🔄 Refresh', callback_data: 'my_posts' },
       { text: '⬅️ Back to My Account', callback_data: 'my_account' }
     ]);
     
@@ -201,125 +216,6 @@ bot.action('my_posts', async (ctx) => {
   } catch (error) {
     console.error('Error in my_posts action:', error);
     await ctx.reply('An error occurred while fetching your posts. Please try again.');
-  }
-});
-
-// Handle auto-refresh for posts
-bot.action('my_posts_auto', async (ctx) => {
-  try {
-    // Answer the callback query to stop loading animation
-    await ctx.answerCbQuery('Auto-refresh enabled!');
-    
-    const { id } = ctx.from;
-    const fullName = getFullName(ctx.from);
-    const settings = await getUserSettings(id);
-    const authorName = settings.authorName || fullName;
-    
-    // Get user posts with details
-    const posts = await getUserPostsWithDetails(id);
-    
-    if (posts.length === 0) {
-      // Edit the message instead of sending a new one
-      await ctx.editMessageText('You have no posts yet.', {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🔄 Auto-refresh (5s)', callback_data: 'my_posts_auto' }],
-            [{ text: '⬅️ Back to My Account', callback_data: 'my_account' }]
-          ]
-        }
-      });
-      return;
-    }
-    
-    // Format post list with real view counts
-    let message = `Posts by ${authorName}\n\n`;
-    posts.forEach((post, index) => {
-      const postUrl = `${BASE_URL}/${post.slug}`;
-      const editUrl = `${BASE_URL}/edit/${post.slug}/${post.editToken || ''}`;
-      message += `${index + 1}. ${post.title}\n`;
-      message += `${post.views} view${post.views !== 1 ? 's' : ''} • ${postUrl}\n\n`;
-    });
-    
-    // Create keyboard with post management options
-    const keyboard = [];
-    posts.forEach((post, index) => {
-      keyboard.push([
-        { text: `🗑️ Delete ${index + 1}`, callback_data: `delete_post_${post.slug}` },
-        { text: `✏️ Edit ${index + 1}`, url: `${BASE_URL}/edit/${post.slug}/${post.editToken || ''}` }
-      ]);
-    });
-    
-    keyboard.push([
-      { text: '🔄 Auto-refresh (5s)', callback_data: 'my_posts_auto' },
-      { text: '⬅️ Back to My Account', callback_data: 'my_account' }
-    ]);
-    
-    // Edit the message instead of sending a new one
-    await ctx.editMessageText(message, {
-      disable_web_page_preview: true,
-      reply_markup: {
-        inline_keyboard: keyboard
-      }
-    });
-    
-    // Set up auto-refresh every 5 seconds
-    const autoRefreshInterval = setInterval(async () => {
-      try {
-        const updatedPosts = await getUserPostsWithDetails(id);
-        
-        if (updatedPosts.length === 0) {
-          await ctx.editMessageText('You have no posts yet.', {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🔄 Auto-refresh (5s)', callback_data: 'my_posts_auto' }],
-                [{ text: '⬅️ Back to My Account', callback_data: 'my_account' }]
-              ]
-            }
-          });
-          clearInterval(autoRefreshInterval);
-          return;
-        }
-        
-        // Format updated post list
-        let updatedMessage = `Posts by ${authorName}\n\n`;
-        updatedPosts.forEach((post, index) => {
-          const postUrl = `${BASE_URL}/${post.slug}`;
-          updatedMessage += `${index + 1}. ${post.title}\n`;
-          updatedMessage += `${post.views} view${post.views !== 1 ? 's' : ''} • ${postUrl}\n\n`;
-        });
-        
-        // Create updated keyboard
-        const updatedKeyboard = [];
-        updatedPosts.forEach((post, index) => {
-          updatedKeyboard.push([
-            { text: `🗑️ Delete ${index + 1}`, callback_data: `delete_post_${post.slug}` },
-            { text: `✏️ Edit ${index + 1}`, url: `${BASE_URL}/edit/${post.slug}/${post.editToken || ''}` }
-          ]);
-        });
-        
-        updatedKeyboard.push([
-          { text: '🔄 Auto-refresh (5s)', callback_data: 'my_posts_auto' },
-          { text: '⬅️ Back to My Account', callback_data: 'my_account' }
-        ]);
-        
-        await ctx.editMessageText(updatedMessage, {
-          disable_web_page_preview: true,
-          reply_markup: {
-            inline_keyboard: updatedKeyboard
-          }
-        });
-      } catch (error) {
-        console.error('Auto-refresh error:', error);
-        clearInterval(autoRefreshInterval);
-      }
-    }, 5000); // Refresh every 5 seconds
-    
-    // Store the interval ID to clear it when user navigates away
-    await redis.set(`auto_refresh_${id}`, autoRefreshInterval, { EX: 300 }); // 5 minutes max
-    
-  } catch (error) {
-    console.error('Error in my_posts_auto action:', error);
-    await ctx.reply('An error occurred while setting up auto-refresh. Please try again.');
   }
 });
 
@@ -397,14 +293,6 @@ bot.action('my_account', async (ctx) => {
     await ctx.answerCbQuery();
     
     const { id } = ctx.from;
-    
-    // Clear any existing auto-refresh interval
-    const existingInterval = await redis.get(`auto_refresh_${id}`);
-    if (existingInterval) {
-      clearInterval(parseInt(existingInterval));
-      await redis.del(`auto_refresh_${id}`);
-    }
-    
     const fullName = getFullName(ctx.from);
     
     // Get user posts count
@@ -446,14 +334,6 @@ bot.action('settings', async (ctx) => {
     await ctx.answerCbQuery();
     
     const { id } = ctx.from;
-    
-    // Clear any existing auto-refresh interval
-    const existingInterval = await redis.get(`auto_refresh_${id}`);
-    if (existingInterval) {
-      clearInterval(parseInt(existingInterval));
-      await redis.del(`auto_refresh_${id}`);
-    }
-    
     const settings = await getUserSettings(id);
     const authorName = settings.authorName || getFullName(ctx.from);
     
