@@ -7,8 +7,56 @@ import { addPostToUser, getUserSettings } from '../utils/telegramBot.js';
 
 const router = express.Router();
 
+// Check URL availability
+router.post('/check-url', async (req, res) => {
+  try {
+    const { slug } = req.body;
+    
+    if (!slug || !slug.trim()) {
+      return res.json({ available: false, message: 'URL cannot be empty' });
+    }
+    
+    // Clean and validate the slug
+    const cleanSlug = slugify(slug.trim().toLowerCase());
+    
+    if (cleanSlug.length < 3) {
+      return res.json({ available: false, message: 'URL must be at least 3 characters' });
+    }
+    
+    if (cleanSlug.length > 50) {
+      return res.json({ available: false, message: 'URL must be less than 50 characters' });
+    }
+    
+    // Check if slug contains only valid characters
+    if (!/^[a-z0-9-]+$/.test(cleanSlug)) {
+      return res.json({ available: false, message: 'URL can only contain letters, numbers, and hyphens' });
+    }
+    
+    // Check if slug already exists
+    const existingPage = await getPage(cleanSlug);
+    
+    if (existingPage) {
+      return res.json({ 
+        available: false, 
+        message: 'This URL is already taken',
+        slug: cleanSlug
+      });
+    }
+    
+    return res.json({ 
+      available: true, 
+      message: 'URL is available',
+      slug: cleanSlug
+    });
+    
+  } catch (error) {
+    console.error('Error checking URL availability:', error);
+    res.status(500).json({ available: false, message: 'Error checking availability' });
+  }
+});
+
 router.post('/publish', async (req, res) => {
-  const { slug, editToken, title, content, author } = req.body;
+  const { slug, editToken, title, content, author, customSlug } = req.body;
   const cleanTitle = xss(title.trim().slice(0, 120));
   const cleanContent = xss(content, { whiteList: xss.whiteList, css: false });
   
@@ -26,8 +74,36 @@ router.post('/publish', async (req, res) => {
 
   // New page
   if (!slug) {
-    // Generate short 10-character slug for all URLs
-    const newSlug = nanoid(10);
+    // Use custom slug if provided, otherwise generate random one
+    let newSlug;
+    if (customSlug && customSlug.trim()) {
+      // Validate custom slug
+      const cleanCustomSlug = slugify(customSlug.trim().toLowerCase());
+      
+      if (cleanCustomSlug.length < 3) {
+        return res.status(400).json({ ok: false, error: 'custom_slug_too_short' });
+      }
+      
+      if (cleanCustomSlug.length > 50) {
+        return res.status(400).json({ ok: false, error: 'custom_slug_too_long' });
+      }
+      
+      if (!/^[a-z0-9-]+$/.test(cleanCustomSlug)) {
+        return res.status(400).json({ ok: false, error: 'custom_slug_invalid' });
+      }
+      
+      // Check if custom slug already exists
+      const existingPage = await getPage(cleanCustomSlug);
+      if (existingPage) {
+        return res.status(400).json({ ok: false, error: 'custom_slug_taken' });
+      }
+      
+      newSlug = cleanCustomSlug;
+    } else {
+      // Generate short 10-character slug for all URLs
+      newSlug = nanoid(10);
+    }
+    
     const newToken = nanoid(16);
     
     const pageData = { 
