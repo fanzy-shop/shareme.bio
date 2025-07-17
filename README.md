@@ -4,12 +4,13 @@ A simple, elegant blogging platform inspired by Telegraph. ShareMe.bio allows us
 
 ## Features
 
-- **Clean Editor**: Distraction-free writing experience with real-time preview
-- **Image Support**: Drag and drop or click to insert images directly in your posts
+- **Post Creation**: Write and publish posts with a rich text editor
+- **Post Editing**: Edit your posts anytime with your unique edit token
+- **Authentication**: Telegram Bot API
+- **View Statistics**: Track views on your posts
 - **Mobile Responsive**: Optimized for both desktop and mobile devices
-- **Authentication**: Telegram-based authentication system
-- **Edit Tokens**: Secure editing with unique tokens for each post
-- **Dashboard**: Manage all your posts in one place
+- **Inline Bot Mode**: Search posts and share content directly from any chat
+- **User Search**: Find and share posts by specific users using @username format
 
 ## Tech Stack
 
@@ -81,6 +82,21 @@ The app is configured to work with any Node.js hosting platform:
 2. **Publishing**: Click "PUBLISH" to make your post live
 3. **Editing**: Use the edit token or dashboard to modify posts
 4. **Images**: Click the image icon on empty lines to insert images
+
+## Using the Bot
+
+### Regular Commands
+- Use `/start` to begin and manage your ShareMe.bio account
+- Create new posts, view statistics, and manage your settings
+
+### Inline Mode Features
+You can use @sharemebio_bot inline in any chat to search and share posts:
+
+1. **Search Posts**: Type `@sharemebio_bot search term` to find posts by title or author
+2. **Find User Posts**: Type `@sharemebio_bot @username` to find posts by a specific user
+3. **Share Content**: Select any result to share the post with a clickable link
+
+Example: `@sharemebio_bot @john` will show all posts created by users with "john" in their name.
 
 ## Project Structure
 

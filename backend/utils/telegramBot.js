@@ -1,7 +1,7 @@
 import { Telegraf } from 'telegraf';
 import { nanoid } from 'nanoid';
 import redis from '../redis.js';
-import { getPage, deletePage } from '../models/pageStore.js';
+import { getPage, deletePage, getRecent } from '../models/pageStore.js';
 
 // Initialize bot with token
 const bot = new Telegraf('7948218704:AAHJK8KD9BR7eBM5wUT-PMPrMK-PKUWOC9s');
@@ -90,6 +90,60 @@ async function getUserPostsWithDetails(telegramId) {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
+// Search posts by title or author name
+async function searchPosts(query) {
+  // Get recent pages to search through
+  const recentPages = await getRecent(100);
+  
+  if (!query || query.trim() === '') {
+    return recentPages.slice(0, 10);
+  }
+  
+  // Normalize query for case-insensitive search
+  const normalizedQuery = query.toLowerCase().trim();
+  
+  // Filter pages by title or author containing the query
+  const matchingPages = recentPages.filter(page => {
+    const title = (page.title || '').toLowerCase();
+    const author = (page.author || '').toLowerCase();
+    return title.includes(normalizedQuery) || author.includes(normalizedQuery);
+  });
+  
+  return matchingPages.slice(0, 10); // Return at most 10 results
+}
+
+// Find user by name or username
+async function findUserByName(nameQuery) {
+  if (!nameQuery || nameQuery.trim() === '') return [];
+  
+  const normalizedQuery = nameQuery.toLowerCase().trim();
+  const allUserKeys = await redis.keys(USER_PREFIX + '*');
+  
+  const users = await Promise.all(
+    allUserKeys.map(async (key) => {
+      const userData = await redis.hGetAll(key);
+      const telegramId = key.replace(USER_PREFIX, '');
+      const settings = await getUserSettings(telegramId);
+      
+      return {
+        telegramId,
+        name: userData.name || '',
+        authorName: settings.authorName || userData.name || ''
+      };
+    })
+  );
+  
+  // Filter users by name matching the query
+  const matchingUsers = users.filter(user => {
+    return (
+      user.name.toLowerCase().includes(normalizedQuery) ||
+      user.authorName.toLowerCase().includes(normalizedQuery)
+    );
+  });
+  
+  return matchingUsers.slice(0, 5); // Return at most 5 results
+}
+
 // Generate auth token and store it
 async function generateAuthToken(telegramId) {
   const token = nanoid(32);
@@ -140,6 +194,34 @@ bot.start(async (ctx) => {
     }
   );
 });
+
+// Help command that explains bot features
+bot.command('help', async (ctx) => {
+  await ctx.reply(
+    `ShareMe.bio Bot Help:\n\n` +
+    `💬 <b>Commands</b>\n` +
+    `/start - Manage your account and posts\n` +
+    `/help - Show this help message\n\n` +
+    
+    `📱 <b>Inline Mode</b>\n` +
+    `Use @sharemebio_bot in any chat to:\n\n` +
+    
+    `🔍 <b>Search posts</b>:\n` +
+    `@sharemebio_bot search term\n\n` +
+    
+    `👤 <b>Find user posts</b>:\n` +
+    `@sharemebio_bot @username\n\n` +
+    
+    `🌐 <b>Website</b>: ${BASE_URL}`,
+    { parse_mode: 'HTML' }
+  );
+});
+
+// Set commands for the bot menu in Telegram
+bot.telegram.setMyCommands([
+  { command: 'start', description: 'Start the bot and manage your account' },
+  { command: 'help', description: 'Show help for all features including inline mode' }
+]).catch(err => console.error('Error setting commands:', err));
 
 // Handle "My posts" button click
 bot.action('my_posts', async (ctx) => {
@@ -547,6 +629,141 @@ bot.on('text', async (ctx) => {
     }
   } catch (error) {
     console.error('Error handling text message:', error);
+  }
+});
+
+// Handle inline queries for searching posts
+bot.on('inline_query', async (ctx) => {
+  try {
+    const { query } = ctx.inlineQuery;
+    const offset = parseInt(ctx.inlineQuery.offset) || 0;
+    
+    // Check if we're looking for user's posts (format: @username)
+    if (query.startsWith('@')) {
+      const username = query.slice(1).toLowerCase(); // Remove @ and lowercase
+      
+      // Find matching users
+      const users = await findUserByName(username);
+      
+      if (users.length === 0) {
+        await ctx.answerInlineQuery([{
+          type: 'article',
+          id: 'no-user-found',
+          title: 'No user found',
+          description: `No user found with username "${username}"`,
+          input_message_content: {
+            message_text: `Could not find user "${username}" on shareme.bio`
+          }
+        }]);
+        return;
+      }
+      
+      // Get posts for each user
+      const results = [];
+      
+      for (const user of users) {
+        const userPosts = await getUserPostsWithDetails(user.telegramId);
+        
+        if (userPosts.length === 0) {
+          // Add a "no posts" result if user has no posts
+          results.push({
+            type: 'article',
+            id: `no-posts-${user.telegramId}`,
+            title: `${user.authorName} (no posts)`,
+            description: 'This user has no posts.',
+            input_message_content: {
+              message_text: `${user.authorName} has no posts on shareme.bio`
+            }
+          });
+          continue;
+        }
+        
+        // Add posts from this user
+        userPosts.forEach(post => {
+          const postUrl = `${BASE_URL}/${post.slug}`;
+          
+          results.push({
+            type: 'article',
+            id: post.slug,
+            title: post.title,
+            description: `${post.views} views • By ${user.authorName}`,
+            url: postUrl,
+            input_message_content: {
+              message_text: `Check out "${post.title}" by ${user.authorName}\n${postUrl}`,
+              disable_web_page_preview: false
+            },
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔗 Open Post', url: postUrl }]
+              ]
+            }
+          });
+        });
+      }
+      
+      await ctx.answerInlineQuery(results, {
+        cache_time: 30, // Cache results for 30 seconds
+        next_offset: results.length === 0 ? '' : (offset + results.length).toString()
+      });
+      return;
+    }
+    
+    // Regular search (title/content based)
+    const searchResults = await searchPosts(query);
+    
+    if (searchResults.length === 0) {
+      await ctx.answerInlineQuery([{
+        type: 'article',
+        id: 'no-results',
+        title: 'No results found',
+        description: query ? `No results found for "${query}"` : 'Search for posts...',
+        input_message_content: {
+          message_text: query ? `No results found for "${query}" on shareme.bio` : 'Try searching for posts on shareme.bio'
+        }
+      }]);
+      return;
+    }
+    
+    // Format results for inline query
+    const results = searchResults.map(post => {
+      const postUrl = `${BASE_URL}/${post.slug}`;
+      
+      return {
+        type: 'article',
+        id: post.slug,
+        title: post.title,
+        description: `${post.views} views • By ${post.author}`,
+        url: postUrl,
+        input_message_content: {
+          message_text: `Check out "${post.title}" by ${post.author}\n${postUrl}`,
+          disable_web_page_preview: false
+        },
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔗 Open Post', url: postUrl }]
+          ]
+        }
+      };
+    });
+    
+    await ctx.answerInlineQuery(results, {
+      cache_time: 30, // Cache results for 30 seconds
+      next_offset: results.length === 0 ? '' : (offset + results.length).toString()
+    });
+    
+  } catch (error) {
+    console.error('Error handling inline query:', error);
+    
+    // Return a generic error result
+    await ctx.answerInlineQuery([{
+      type: 'article',
+      id: 'error',
+      title: 'Error occurred',
+      description: 'An error occurred while searching.',
+      input_message_content: {
+        message_text: 'Sorry, an error occurred while searching. Please try again later.'
+      }
+    }]);
   }
 });
 
