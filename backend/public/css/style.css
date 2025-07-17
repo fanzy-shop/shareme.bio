@@ -471,21 +471,6 @@ pre {
   margin: 10px 0;
 }
 
-.spoiler {
-  background-color: #2c2f33;
-  color: transparent;
-  padding: 0 4px;
-  border-radius: 3px;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.spoiler[data-revealed="true"] {
-  background-color: rgba(44, 47, 51, 0.1);
-  color: inherit;
-}
-
 /* Mobile Responsive */
 @media (max-width: 800px) {
   .editor-main {

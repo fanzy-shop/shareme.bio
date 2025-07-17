@@ -40,9 +40,6 @@ class FormatToolbar {
       monospace: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="format-icon">
         <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"></path>
       </svg>`,
-      spoiler: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="format-icon">
-        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"></path>
-      </svg>`,
       link: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="format-icon">
         <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path>
       </svg>`,
@@ -70,7 +67,6 @@ class FormatToolbar {
         { name: 'Strikethrough', shortcut: 'Ctrl+Shift+X', command: 'strikeThrough', icon: icons.strikethrough },
         { name: 'Quote', shortcut: 'Ctrl+Shift+.', command: 'formatBlock', value: '<blockquote>', icon: icons.quote },
         { name: 'Monospace', shortcut: 'Ctrl+Shift+M', command: 'formatBlock', value: '<pre>', icon: icons.monospace },
-        { name: 'Spoiler', shortcut: 'Ctrl+Shift+P', command: 'customSpoiler', icon: icons.spoiler },
         { name: 'Create link', shortcut: 'Ctrl+K', command: 'createLink', icon: icons.link },
         { name: 'Clear formatting', shortcut: 'Ctrl+Shift+N', command: 'clearFormatting', icon: icons.clear },
         { name: 'Undo', shortcut: 'Ctrl+Z', command: 'undo', icon: icons.undo },
@@ -79,9 +75,7 @@ class FormatToolbar {
       
       textStyles.forEach(style => {
         const button = this.createIconButton(style.name, style.icon, style.shortcut, () => {
-          if (style.command === 'customSpoiler') {
-            this.applySpoiler();
-          } else if (style.command === 'createLink') {
+          if (style.command === 'createLink') {
             this.showLinkDialog();
           } else if (style.command === 'clearFormatting') {
             this.clearFormatting();
@@ -101,46 +95,43 @@ class FormatToolbar {
       toolbar.appendChild(mobileToolbarSection);
     } else {
       // Desktop version - text styles section
-    const textStylesSection = document.createElement('div');
-    textStylesSection.className = 'format-toolbar-section';
-    
-    const textStyles = [
+      const textStylesSection = document.createElement('div');
+      textStylesSection.className = 'format-toolbar-section';
+      
+      const textStyles = [
         { name: 'Bold', shortcut: 'Ctrl+B', command: 'bold', icon: icons.bold },
         { name: 'Italic', shortcut: 'Ctrl+I', command: 'italic', icon: icons.italic },
         { name: 'Underline', shortcut: 'Ctrl+U', command: 'underline', icon: icons.underline },
         { name: 'Strikethrough', shortcut: 'Ctrl+Shift+X', command: 'strikeThrough', icon: icons.strikethrough },
         { name: 'Quote', shortcut: 'Ctrl+Shift+.', command: 'formatBlock', value: '<blockquote>', icon: icons.quote },
-        { name: 'Monospace', shortcut: 'Ctrl+Shift+M', command: 'formatBlock', value: '<pre>', icon: icons.monospace },
-        { name: 'Spoiler', shortcut: 'Ctrl+Shift+P', command: 'customSpoiler', icon: icons.spoiler }
-    ];
-    
-    textStyles.forEach(style => {
-      const button = this.createButton(style.name, style.shortcut, () => {
-        if (style.command === 'customSpoiler') {
-          this.applySpoiler();
-        } else if (style.value) {
-          document.execCommand(style.command, false, style.value);
-        } else {
-          document.execCommand(style.command, false, null);
-        }
+        { name: 'Monospace', shortcut: 'Ctrl+Shift+M', command: 'formatBlock', value: '<pre>', icon: icons.monospace }
+      ];
+      
+      textStyles.forEach(style => {
+        const button = this.createButton(style.name, style.shortcut, () => {
+          if (style.value) {
+            document.execCommand(style.command, false, style.value);
+          } else {
+            document.execCommand(style.command, false, null);
+          }
+        });
+        textStylesSection.appendChild(button);
       });
-      textStylesSection.appendChild(button);
-    });
-    
-    // Links & Cleaning section
-    const linksSection = document.createElement('div');
-    linksSection.className = 'format-toolbar-section';
-    
-    const linkButton = this.createButton('Create link', 'Ctrl+K', () => {
-      this.showLinkDialog();
-    });
-    
-    const clearButton = this.createButton('Clear formatting', 'Ctrl+Shift+N', () => {
-      this.clearFormatting();
-    });
-    
-    linksSection.appendChild(linkButton);
-    linksSection.appendChild(clearButton);
+      
+      // Links & Cleaning section
+      const linksSection = document.createElement('div');
+      linksSection.className = 'format-toolbar-section';
+      
+      const linkButton = this.createButton('Create link', 'Ctrl+K', () => {
+        this.showLinkDialog();
+      });
+      
+      const clearButton = this.createButton('Clear formatting', 'Ctrl+Shift+N', () => {
+        this.clearFormatting();
+      });
+      
+      linksSection.appendChild(linkButton);
+      linksSection.appendChild(clearButton);
       
       // Undo/Redo section
       const undoRedoSection = document.createElement('div');
@@ -159,10 +150,10 @@ class FormatToolbar {
       
       undoRedoSection.appendChild(undoButton);
       undoRedoSection.appendChild(redoButton);
-    
-    // Add sections to toolbar
-    toolbar.appendChild(textStylesSection);
-    toolbar.appendChild(linksSection);
+      
+      // Add sections to toolbar
+      toolbar.appendChild(textStylesSection);
+      toolbar.appendChild(linksSection);
       toolbar.appendChild(undoRedoSection);
     }
     
@@ -312,14 +303,6 @@ class FormatToolbar {
     // Add keyboard shortcuts
     this.editor.addEventListener('keydown', this.handleKeyboardShortcuts.bind(this));
     
-    // Add click handler for spoilers in the editor
-    this.editor.addEventListener('click', (e) => {
-      if (e.target.classList.contains('spoiler') || e.target.closest('.spoiler')) {
-        const spoiler = e.target.classList.contains('spoiler') ? e.target : e.target.closest('.spoiler');
-        this.toggleSpoiler(spoiler);
-      }
-    });
-    
     // Handle window resize
     window.addEventListener('resize', () => {
       const wasMobile = this.isMobile;
@@ -398,40 +381,6 @@ class FormatToolbar {
     }
   }
   
-  // Toggle spoiler visibility
-  toggleSpoiler(spoilerElement) {
-    if (spoilerElement.dataset.revealed !== 'true') {
-      spoilerElement.style.backgroundColor = 'rgba(44, 47, 51, 0.1)';
-      spoilerElement.style.color = 'inherit';
-      spoilerElement.dataset.revealed = 'true';
-    } else {
-      spoilerElement.style.backgroundColor = '#2c2f33';
-      spoilerElement.style.color = 'transparent';
-      spoilerElement.dataset.revealed = 'false';
-    }
-  }
-  
-  applySpoiler() {
-    // Custom implementation for spoiler since it's not a standard command
-    const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      
-      // Create spoiler span
-      const spoilerSpan = document.createElement('span');
-      spoilerSpan.className = 'spoiler';
-      spoilerSpan.style.backgroundColor = '#2c2f33';
-      spoilerSpan.style.color = 'transparent';
-      spoilerSpan.style.cursor = 'pointer';
-      spoilerSpan.dataset.spoiler = 'true';
-      spoilerSpan.dataset.revealed = 'false';
-      
-      // Extract selection content and put it in the span
-      spoilerSpan.appendChild(range.extractContents());
-      range.insertNode(spoilerSpan);
-    }
-  }
-  
   // Enhanced clear formatting that handles all elements
   clearFormatting() {
     const selection = window.getSelection();
@@ -494,28 +443,11 @@ class FormatToolbar {
         return null;
       }
       
-      // Handle inline formatting (bold, italic, underline, strike, spoiler)
+      // Handle inline formatting (bold, italic, underline, strike)
       if (nodeName === 'b' || nodeName === 'strong' || 
           nodeName === 'i' || nodeName === 'em' ||
           nodeName === 'u' || nodeName === 's' || 
           nodeName === 'strike' || nodeName === 'del') {
-        const fragment = document.createDocumentFragment();
-        while (node.firstChild) {
-          const child = node.firstChild;
-          node.removeChild(child);
-          // Process child nodes recursively
-          if (child.nodeType === Node.ELEMENT_NODE) {
-            processNode(child);
-          }
-          fragment.appendChild(child);
-        }
-        node.parentNode.replaceChild(fragment, node);
-        return null;
-      }
-      
-      // Handle spoiler spans
-      if ((nodeName === 'span' && node.classList.contains('spoiler')) || 
-          node.dataset.spoiler === 'true') {
         const fragment = document.createDocumentFragment();
         while (node.firstChild) {
           const child = node.firstChild;
@@ -704,12 +636,6 @@ class FormatToolbar {
     if (e.ctrlKey && e.shiftKey && e.key === 'M') {
       e.preventDefault();
       document.execCommand('formatBlock', false, '<pre>');
-    }
-    
-    // Spoiler: Ctrl+Shift+P
-    if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-      e.preventDefault();
-      this.applySpoiler();
     }
     
     // Create Link: Ctrl+K
