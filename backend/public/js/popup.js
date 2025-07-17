@@ -135,4 +135,89 @@ function showSuccessPopup(options = {}) {
   }
 }
 
-export { createSuccessPopup, showSuccessPopup }; 
+// Create and append the custom URL popup to the body
+function createCustomUrlPopup() {
+  const popupHTML = `
+    <div class="popup-overlay" id="customUrlOverlay"></div>
+    <div id="customUrlPopup" class="success-popup custom-url-popup">
+      <div class="success-popup-content">
+        <div class="success-popup-message">Customize Your URL</div>
+        <div class="success-popup-submessage">Create a custom URL for your page</div>
+      </div>
+      <div class="custom-url-container">
+        <div class="custom-url-input-wrapper">
+          <span class="custom-url-prefix">${window.location.origin}/</span>
+          <input type="text" id="customUrlInput" class="custom-url-input" placeholder="your-custom-url">
+        </div>
+        <div id="customUrlStatus" class="custom-url-status"></div>
+      </div>
+      <div class="popup-buttons">
+        <button class="popup-button secondary" id="skipCustomUrl">SKIP</button>
+        <button class="popup-button primary" id="saveCustomUrl" disabled>PUBLISH</button>
+      </div>
+    </div>
+  `;
+  
+  // Append popup to body
+  document.body.insertAdjacentHTML('beforeend', popupHTML);
+  
+  // Get references to the elements
+  const customUrlPopup = document.querySelector('#customUrlPopup');
+  const customUrlOverlay = document.querySelector('#customUrlOverlay');
+  const customUrlInput = document.querySelector('#customUrlInput');
+  const customUrlStatus = document.querySelector('#customUrlStatus');
+  const skipButton = document.querySelector('#skipCustomUrl');
+  const saveButton = document.querySelector('#saveCustomUrl');
+  
+  // Function to hide popup
+  function hidePopup() {
+    customUrlPopup.classList.remove('show');
+    customUrlOverlay.classList.remove('show');
+  }
+  
+  return {
+    popup: customUrlPopup,
+    overlay: customUrlOverlay,
+    input: customUrlInput,
+    status: customUrlStatus,
+    skipButton,
+    saveButton,
+    hide: hidePopup
+  };
+}
+
+// Show the custom URL popup
+function showCustomUrlPopup(options = {}) {
+  const popupElements = window.customUrlPopupElements || createCustomUrlPopup();
+  window.customUrlPopupElements = popupElements;
+  
+  // Clear any previous input
+  popupElements.input.value = '';
+  popupElements.status.textContent = '';
+  popupElements.status.className = 'custom-url-status';
+  popupElements.saveButton.disabled = true;
+  
+  // Set up callbacks
+  popupElements.skipButton.onclick = () => {
+    popupElements.hide();
+    if (options.onSkip) options.onSkip();
+  };
+  
+  popupElements.saveButton.onclick = () => {
+    popupElements.hide();
+    if (options.onSave) options.onSave(popupElements.input.value);
+  };
+  
+  // Show the popup and overlay
+  popupElements.popup.classList.add('show');
+  popupElements.overlay.classList.add('show');
+  
+  // Focus the input field
+  setTimeout(() => {
+    popupElements.input.focus();
+  }, 100);
+  
+  return popupElements;
+}
+
+export { createSuccessPopup, showSuccessPopup, createCustomUrlPopup, showCustomUrlPopup }; 

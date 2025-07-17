@@ -7,8 +7,42 @@ import { addPostToUser, getUserSettings } from '../utils/telegramBot.js';
 
 const router = express.Router();
 
+// Check if a custom slug is available
+router.post('/check-slug', async (req, res) => {
+  try {
+    const { slug } = req.body;
+    
+    if (!slug || slug.trim() === '') {
+      return res.json({ available: false, error: 'Slug cannot be empty' });
+    }
+    
+    // Slugify the input to ensure valid format
+    const cleanSlug = slugify(slug);
+    
+    if (cleanSlug.length < 3) {
+      return res.json({ available: false, error: 'Slug must be at least 3 characters' });
+    }
+    
+    if (cleanSlug.length > 50) {
+      return res.json({ available: false, error: 'Slug must be less than 50 characters' });
+    }
+    
+    // Check if slug already exists
+    const existingPage = await getPage(cleanSlug);
+    
+    return res.json({
+      available: !existingPage,
+      slug: cleanSlug,
+      error: existingPage ? 'This URL is already taken' : null
+    });
+  } catch (error) {
+    console.error('Error checking slug availability:', error);
+    return res.status(500).json({ available: false, error: 'Server error' });
+  }
+});
+
 router.post('/publish', async (req, res) => {
-  const { slug, editToken, title, content, author } = req.body;
+  const { slug, editToken, title, content, author, customSlug } = req.body;
   const cleanTitle = xss(title.trim().slice(0, 120));
   const cleanContent = xss(content, { whiteList: xss.whiteList, css: false });
   
@@ -26,8 +60,26 @@ router.post('/publish', async (req, res) => {
 
   // New page
   if (!slug) {
-    // Generate short 10-character slug for all URLs
-    const newSlug = nanoid(10);
+    // Use custom slug if provided, otherwise generate a random one
+    let newSlug;
+    
+    if (customSlug && customSlug.trim() !== '') {
+      // Slugify the custom slug
+      newSlug = slugify(customSlug);
+      
+      // Check if the slug already exists
+      const existingPage = await getPage(newSlug);
+      if (existingPage) {
+        return res.status(400).json({ 
+          ok: false, 
+          error: 'This custom URL is already taken. Please choose another one.' 
+        });
+      }
+    } else {
+      // Generate short 10-character slug for all URLs
+      newSlug = nanoid(10);
+    }
+    
     const newToken = nanoid(16);
     
     const pageData = { 
