@@ -91,8 +91,28 @@ async function getUserPostsWithDetails(telegramId) {
 }
 
 // Search posts by title or author name
-async function searchPosts(query) {
-  // Get recent pages to search through
+async function searchPosts(query, telegramId = null) {
+  // If telegramId is provided, only search that user's posts
+  if (telegramId) {
+    const userPosts = await getUserPostsWithDetails(telegramId);
+    
+    if (!query || query.trim() === '') {
+      return userPosts.slice(0, 10);
+    }
+    
+    // Normalize query for case-insensitive search
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    // Filter user's posts by title or content
+    const matchingPosts = userPosts.filter(post => {
+      const title = (post.title || '').toLowerCase();
+      return title.includes(normalizedQuery);
+    });
+    
+    return matchingPosts.slice(0, 10);
+  } 
+  
+  // Fallback to searching all posts (used for admin functions)
   const recentPages = await getRecent(100);
   
   if (!query || query.trim() === '') {
@@ -206,7 +226,7 @@ bot.command('help', async (ctx) => {
     `📱 <b>Inline Mode</b>\n` +
     `Use @sharemebio_bot in any chat to:\n\n` +
     
-    `🔍 <b>Search posts</b>:\n` +
+    `🔍 <b>Search your posts</b>:\n` +
     `@sharemebio_bot search term\n\n` +
     
     `👤 <b>Find user posts</b>:\n` +
@@ -637,6 +657,7 @@ bot.on('inline_query', async (ctx) => {
   try {
     const { query } = ctx.inlineQuery;
     const offset = parseInt(ctx.inlineQuery.offset) || 0;
+    const { id: currentUserId } = ctx.from;
     
     // Check if we're looking for user's posts (format: @username)
     if (query.startsWith('@')) {
@@ -708,21 +729,27 @@ bot.on('inline_query', async (ctx) => {
       return;
     }
     
-    // Regular search (title/content based)
-    const searchResults = await searchPosts(query);
+    // Regular search - only search current user's posts
+    const searchResults = await searchPosts(query, currentUserId);
     
     if (searchResults.length === 0) {
       await ctx.answerInlineQuery([{
         type: 'article',
         id: 'no-results',
         title: 'No results found',
-        description: query ? `No results found for "${query}"` : 'Search for posts...',
+        description: query ? `No results found for "${query}"` : 'Search your posts...',
         input_message_content: {
-          message_text: query ? `No results found for "${query}" on shareme.bio` : 'Try searching for posts on shareme.bio'
+          message_text: query ? `No posts found matching "${query}"` : 'You have no posts matching your search'
         }
       }]);
       return;
     }
+    
+    // Get user settings for author name
+    const { id } = ctx.from;
+    const user = await getUser(id);
+    const settings = await getUserSettings(id);
+    const authorName = settings.authorName || (user ? user.name : 'Anonymous');
     
     // Format results for inline query
     const results = searchResults.map(post => {
@@ -732,10 +759,10 @@ bot.on('inline_query', async (ctx) => {
         type: 'article',
         id: post.slug,
         title: post.title,
-        description: `${post.views} views • By ${post.author}`,
+        description: `${post.views} views • One of your posts`,
         url: postUrl,
         input_message_content: {
-          message_text: `Check out "${post.title}" by ${post.author}\n${postUrl}`,
+          message_text: `Check out "${post.title}" by ${authorName}\n${postUrl}`,
           disable_web_page_preview: false
         },
         reply_markup: {

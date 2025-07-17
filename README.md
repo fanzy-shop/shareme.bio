@@ -92,11 +92,11 @@ The app is configured to work with any Node.js hosting platform:
 ### Inline Mode Features
 You can use @sharemebio_bot inline in any chat to search and share posts:
 
-1. **Search Posts**: Type `@sharemebio_bot search term` to find posts by title or author
+1. **Search Your Posts**: Type `@sharemebio_bot search term` to find your own posts by title
 2. **Find User Posts**: Type `@sharemebio_bot @username` to find posts by a specific user
 3. **Share Content**: Select any result to share the post with a clickable link
 
-Example: `@sharemebio_bot @john` will show all posts created by users with "john" in their name.
+Example: `@sharemebio_bot @john` will show all posts created by users with "john" in their name, while `@sharemebio_bot project` will search only your own posts containing "project" in the title.
 
 ## Project Structure
 
