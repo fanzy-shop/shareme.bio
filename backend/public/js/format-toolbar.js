@@ -58,9 +58,33 @@ class FormatToolbar {
     linksSection.appendChild(linkButton);
     linksSection.appendChild(clearButton);
     
+    // Undo/Redo section
+    const undoRedoSection = document.createElement('div');
+    undoRedoSection.className = 'format-toolbar-section';
+    
+    const undoIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+  <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"></path>
+</svg>`;
+
+const redoIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+  <path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"></path>
+</svg>`;
+
+const undoButton = this.createButton(`${undoIcon}Undo`, 'Ctrl+Z', () => {
+  this.undo();
+});
+
+const redoButton = this.createButton(`${redoIcon}Redo`, 'Ctrl+Y', () => {
+  this.redo();
+});
+    
+    undoRedoSection.appendChild(undoButton);
+    undoRedoSection.appendChild(redoButton);
+    
     // Add sections to toolbar
     toolbar.appendChild(textStylesSection);
     toolbar.appendChild(linksSection);
+    toolbar.appendChild(undoRedoSection);
     
     // Add toolbar to document
     document.body.appendChild(toolbar);
@@ -208,6 +232,11 @@ class FormatToolbar {
           this.undoStack.push(currentContent);
           this.redoStack = [];
           this.lastContent = currentContent;
+          
+          // Limit stack size to prevent memory issues
+          if (this.undoStack.length > 100) {
+            this.undoStack.shift();
+          }
         }
       }
     });
@@ -437,20 +466,39 @@ class FormatToolbar {
     // Position toolbar above the selection
     const toolbarHeight = toolbar.offsetHeight || 200; // Estimate if not rendered yet
     
-    toolbar.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (toolbar.offsetWidth / 2)}px`;
-    toolbar.style.top = `${rect.top + window.scrollY - toolbarHeight - 10}px`;
+    // Calculate initial position
+    let left = rect.left + window.scrollX + (rect.width / 2) - (toolbar.offsetWidth / 2);
+    let top = rect.top + window.scrollY - toolbarHeight - 10;
     
-    // Make sure toolbar is within viewport
+    // Make sure toolbar is within viewport horizontally
     const viewportWidth = window.innerWidth;
-    const toolbarRect = toolbar.getBoundingClientRect();
+    const editorRect = this.editor.getBoundingClientRect();
+    const editorLeft = editorRect.left + window.scrollX;
+    const editorRight = editorRect.right + window.scrollX;
     
-    if (toolbarRect.right > viewportWidth) {
-      toolbar.style.left = `${viewportWidth - toolbar.offsetWidth - 10}px`;
+    // Constrain to editor width
+    if (left + toolbar.offsetWidth > editorRight) {
+      left = editorRight - toolbar.offsetWidth - 10;
     }
     
-    if (toolbarRect.left < 0) {
-      toolbar.style.left = '10px';
+    if (left < editorLeft) {
+      left = editorLeft + 10;
     }
+    
+    // Ensure we don't go off-screen
+    if (left < 10) left = 10;
+    if (left + toolbar.offsetWidth > window.innerWidth - 10) {
+      left = window.innerWidth - toolbar.offsetWidth - 10;
+    }
+    
+    // Check if toolbar would go above viewport
+    if (top < window.scrollY + 10) {
+      // Place below selection instead
+      top = rect.bottom + window.scrollY + 10;
+    }
+    
+    toolbar.style.left = `${left}px`;
+    toolbar.style.top = `${top}px`;
     
     toolbar.classList.add('show');
   }

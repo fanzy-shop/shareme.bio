@@ -544,6 +544,8 @@ pre {
   z-index: 100;
   padding: 0;
   overflow: hidden;
+  max-width: 250px; /* Limit width to prevent overflow */
+  width: 250px; /* Fixed width */
 }
 
 .format-toolbar.show {
@@ -571,6 +573,7 @@ pre {
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.2s, color 0.2s;
+  overflow: hidden; /* Prevent content overflow */
 }
 
 .format-button:hover {
@@ -582,6 +585,13 @@ pre {
   margin-left: 20px;
   color: #72767d;
   font-size: 12px;
+  white-space: nowrap; /* Prevent shortcut from wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Show ellipsis for overflow */
+}
+
+.format-button svg {
+  flex-shrink: 0; /* Prevent SVG from shrinking */
 }
 
 .format-button.active {
