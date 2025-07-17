@@ -215,7 +215,7 @@ bot.action('my_posts', async (ctx) => {
     });
   } catch (error) {
     console.error('Error in my_posts action:', error);
-    await ctx.reply('An error occurred while fetching your posts. Please try again.');
+    // Don't show error message to user, just log it
   }
 });
 
@@ -323,7 +323,7 @@ bot.action('my_account', async (ctx) => {
     );
   } catch (error) {
     console.error('Error in my_account action:', error);
-    await ctx.reply('An error occurred. Please try again.');
+    // Don't show error message to user, just log it
   }
 });
 
@@ -353,7 +353,7 @@ bot.action('settings', async (ctx) => {
     );
   } catch (error) {
     console.error('Error in settings action:', error);
-    await ctx.reply('An error occurred. Please try again.');
+    // Don't show error message to user, just log it
   }
 });
 
@@ -383,7 +383,7 @@ bot.action('change_author_name', async (ctx) => {
     
   } catch (error) {
     console.error('Error in change_author_name action:', error);
-    await ctx.reply('An error occurred. Please try again.');
+    // Don't show error message to user, just log it
   }
 });
 
@@ -412,7 +412,7 @@ bot.action('use_telegram_name', async (ctx) => {
     
   } catch (error) {
     console.error('Error in use_telegram_name action:', error);
-    await ctx.reply('An error occurred. Please try again.');
+    // Don't show error message to user, just log it
   }
 });
 
@@ -448,7 +448,7 @@ bot.action('view_stats', async (ctx) => {
     
   } catch (error) {
     console.error('Error in view_stats action:', error);
-    await ctx.reply('An error occurred. Please try again.');
+    // Don't show error message to user, just log it
   }
 });
 
@@ -476,7 +476,7 @@ bot.action('refresh_all', async (ctx) => {
     
   } catch (error) {
     console.error('Error in refresh_all action:', error);
-    await ctx.reply('An error occurred. Please try again.');
+    // Don't show error message to user, just log it
   }
 });
 
