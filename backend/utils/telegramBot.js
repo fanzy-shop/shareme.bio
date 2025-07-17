@@ -67,9 +67,12 @@ async function getUserPosts(telegramId) {
 async function getUserPostsWithDetails(telegramId) {
   const slugs = await getUserPosts(telegramId);
   
+  // Use a Set to track unique slugs
+  const uniqueSlugs = [...new Set(slugs)];
+  
   // Get details for each post
   const postsWithDetails = await Promise.all(
-    slugs.map(async (slug) => {
+    uniqueSlugs.map(async (slug) => {
       const page = await getPage(slug);
       if (!page) return null;
       
@@ -96,15 +99,28 @@ async function searchPosts(query, telegramId = null) {
   if (telegramId) {
     const userPosts = await getUserPostsWithDetails(telegramId);
     
+    // Create a map to ensure unique slugs
+    const uniquePosts = new Map();
+    
+    // Add posts to the map using slug as key to ensure uniqueness
+    userPosts.forEach(post => {
+      if (!uniquePosts.has(post.slug)) {
+        uniquePosts.set(post.slug, post);
+      }
+    });
+    
+    // Convert map back to array
+    const dedupedPosts = Array.from(uniquePosts.values());
+    
     if (!query || query.trim() === '') {
-      return userPosts.slice(0, 10);
+      return dedupedPosts.slice(0, 10);
     }
     
     // Normalize query for case-insensitive search
     const normalizedQuery = query.toLowerCase().trim();
     
     // Filter user's posts by title or content
-    const matchingPosts = userPosts.filter(post => {
+    const matchingPosts = dedupedPosts.filter(post => {
       const title = (post.title || '').toLowerCase();
       return title.includes(normalizedQuery);
     });
@@ -115,15 +131,28 @@ async function searchPosts(query, telegramId = null) {
   // Fallback to searching all posts (used for admin functions)
   const recentPages = await getRecent(100);
   
+  // Create a map to ensure unique slugs
+  const uniquePages = new Map();
+  
+  // Add pages to the map using slug as key to ensure uniqueness
+  recentPages.forEach(page => {
+    if (!uniquePages.has(page.slug)) {
+      uniquePages.set(page.slug, page);
+    }
+  });
+  
+  // Convert map back to array
+  const dedupedPages = Array.from(uniquePages.values());
+  
   if (!query || query.trim() === '') {
-    return recentPages.slice(0, 10);
+    return dedupedPages.slice(0, 10);
   }
   
   // Normalize query for case-insensitive search
   const normalizedQuery = query.toLowerCase().trim();
   
   // Filter pages by title or author containing the query
-  const matchingPages = recentPages.filter(page => {
+  const matchingPages = dedupedPages.filter(page => {
     const title = (page.title || '').toLowerCase();
     const author = (page.author || '').toLowerCase();
     return title.includes(normalizedQuery) || author.includes(normalizedQuery);
@@ -681,6 +710,7 @@ bot.on('inline_query', async (ctx) => {
       
       // Get posts for each user
       const results = [];
+      const processedSlugs = new Set(); // Track processed slugs to avoid duplicates
       
       for (const user of users) {
         const userPosts = await getUserPostsWithDetails(user.telegramId);
@@ -699,8 +729,14 @@ bot.on('inline_query', async (ctx) => {
           continue;
         }
         
-        // Add posts from this user
+        // Add posts from this user, avoiding duplicates
         userPosts.forEach(post => {
+          // Skip if this slug is already processed
+          if (processedSlugs.has(post.slug)) {
+            return;
+          }
+          
+          processedSlugs.add(post.slug);
           const postUrl = `${BASE_URL}/${post.slug}`;
           
           results.push({
@@ -722,9 +758,9 @@ bot.on('inline_query', async (ctx) => {
         });
       }
       
-      await ctx.answerInlineQuery(results, {
+      await ctx.answerInlineQuery(results.slice(0, 50), {
         cache_time: 30, // Cache results for 30 seconds
-        next_offset: results.length === 0 ? '' : (offset + results.length).toString()
+        next_offset: results.length > 50 ? (offset + 50).toString() : ''
       });
       return;
     }
@@ -751,11 +787,20 @@ bot.on('inline_query', async (ctx) => {
     const settings = await getUserSettings(id);
     const authorName = settings.authorName || (user ? user.name : 'Anonymous');
     
-    // Format results for inline query
-    const results = searchResults.map(post => {
+    // Format results for inline query, ensuring no duplicates
+    const processedSlugs = new Set();
+    const results = [];
+    
+    searchResults.forEach(post => {
+      // Skip if this slug is already processed
+      if (processedSlugs.has(post.slug)) {
+        return;
+      }
+      
+      processedSlugs.add(post.slug);
       const postUrl = `${BASE_URL}/${post.slug}`;
       
-      return {
+      results.push({
         type: 'article',
         id: post.slug,
         title: post.title,
@@ -770,12 +815,12 @@ bot.on('inline_query', async (ctx) => {
             [{ text: '🔗 Open Post', url: postUrl }]
           ]
         }
-      };
+      });
     });
     
-    await ctx.answerInlineQuery(results, {
+    await ctx.answerInlineQuery(results.slice(0, 50), {
       cache_time: 30, // Cache results for 30 seconds
-      next_offset: results.length === 0 ? '' : (offset + results.length).toString()
+      next_offset: results.length > 50 ? (offset + 50).toString() : ''
     });
     
   } catch (error) {
