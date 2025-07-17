@@ -339,25 +339,25 @@ bot.action('my_account', async (ctx) => {
 // Handle "Settings" button click
 bot.action('settings', async (ctx) => {
   try {
-    // Answer the callback query to stop loading animation
-    await ctx.answerCbQuery();
+  // Answer the callback query to stop loading animation
+  await ctx.answerCbQuery();
     
     const { id } = ctx.from;
     const settings = await getUserSettings(id);
     const authorName = settings.authorName || getFullName(ctx.from);
-    
-    // Edit the message instead of sending a new one
+  
+  // Edit the message instead of sending a new one
     await ctx.editMessageText(
       `⚙️ Settings\n\nCurrent author name: ${authorName}\n\nWhat would you like to change?`,
       {
-        reply_markup: {
-          inline_keyboard: [
+    reply_markup: {
+      inline_keyboard: [
             [{ text: '✏️ Change author name', callback_data: 'change_author_name' }],
             [{ text: '📊 View statistics', callback_data: 'view_stats' }],
             [{ text: '🔄 Refresh all data', callback_data: 'refresh_all' }],
-            [{ text: '⬅️ Back to My Account', callback_data: 'my_account' }]
-          ]
-        }
+        [{ text: '⬅️ Back to My Account', callback_data: 'my_account' }]
+      ]
+    }
       }
     );
   } catch (error) {
