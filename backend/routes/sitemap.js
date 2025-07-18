@@ -1,5 +1,5 @@
 import express from 'express';
-import SitemapGenerator from '../utils/sitemapGenerator.js';
+import { SitemapGenerator } from '../utils/sitemapGenerator.js';
 
 const router = express.Router();
 
