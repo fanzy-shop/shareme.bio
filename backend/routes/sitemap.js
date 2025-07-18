@@ -1,10 +1,10 @@
 import express from 'express';
-import { SitemapGenerator } from '../utils/sitemapGenerator.js';
+import SitemapGenerator from '../utils/sitemapGenerator.js';
 
 const router = express.Router();
 
-// Initialize sitemap generator
-const sitemapGenerator = new SitemapGenerator(process.env.BASE_URL || 'https://shareme.bio');
+// Create sitemap generator with the base URL
+const sitemapGenerator = new SitemapGenerator(process.env.BASE_URL || 'https://www.shareme.bio');
 
 // Generate sitemap.xml
 router.get('/sitemap.xml', async (req, res) => {
@@ -21,7 +21,7 @@ router.get('/sitemap.xml', async (req, res) => {
     const basicXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>${process.env.BASE_URL || 'https://shareme.bio'}/</loc>
+    <loc>${process.env.BASE_URL || 'https://www.shareme.bio'}/</loc>
     <priority>1.0</priority>
     <changefreq>daily</changefreq>
   </url>
@@ -34,11 +34,16 @@ router.get('/sitemap.xml', async (req, res) => {
 // Generate sitemap index
 router.get('/sitemap-index.xml', async (req, res) => {
   try {
-    const xml = sitemapGenerator.generateSitemapIndex();
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${process.env.BASE_URL || 'https://www.shareme.bio'}/sitemap.xml</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+  </sitemap>
+</sitemapindex>`;
     
-    res.set('Content-Type', 'application/xml');
+    res.header('Content-Type', 'application/xml');
     res.send(xml);
-    
   } catch (error) {
     console.error('Error generating sitemap index:', error);
     res.status(500).send('Error generating sitemap index');

@@ -18,8 +18,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Set base URL for the application
-process.env.BASE_URL = process.env.BASE_URL || 'https://shareme.bio';
+// Set base URL from environment or default
+process.env.BASE_URL = process.env.BASE_URL || 'https://www.shareme.bio';
 
 app.set('view engine', 'ejs');
 app.set('views', path.resolve(__dirname, 'views'));

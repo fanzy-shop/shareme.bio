@@ -1,6 +1,6 @@
-# ShareMe.bio
+# www.ShareMe.bio
 
-A simple, elegant blogging platform inspired by Telegraph. ShareMe.bio allows users to create and publish beautiful articles with a clean, minimalist interface.
+A simple, elegant blogging platform inspired by Telegraph. www.ShareMe.bio allows users to create and publish beautiful articles with a clean, minimalist interface.
 
 ## Features
 
@@ -86,7 +86,7 @@ The app is configured to work with any Node.js hosting platform:
 ## Using the Bot
 
 ### Regular Commands
-- Use `/start` to begin and manage your ShareMe.bio account
+- Use `/start` to begin and manage your www.ShareMe.bio account
 - Create new posts, view statistics, and manage your settings
 
 ### Inline Mode Features

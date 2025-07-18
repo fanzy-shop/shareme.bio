@@ -13,7 +13,7 @@ const AUTH_TOKEN_PREFIX = 'auth:';
 const USER_SETTINGS_PREFIX = 'user_settings:';
 
 // Base URL for the application
-const BASE_URL = 'https://shareme.bio';
+const BASE_URL = 'https://www.shareme.bio';
 
 // Get user's full name from Telegram user object
 function getFullName(user) {
@@ -230,7 +230,7 @@ bot.start(async (ctx) => {
   
   // Send welcome message with inline keyboard
   await ctx.reply(
-    `This is your current Shareme.bio account:\n\n${fullName}\n\nAuthor: ${authorName}\n\n${postCount} posts.`,
+    `This is your current www.shareme.bio account:\n\n${fullName}\n\nAuthor: ${authorName}\n\n${postCount} posts.`,
     {
       reply_markup: {
         inline_keyboard: [
@@ -247,7 +247,7 @@ bot.start(async (ctx) => {
 // Help command that explains bot features
 bot.command('help', async (ctx) => {
   await ctx.reply(
-    `ShareMe.bio Bot Help:\n\n` +
+    `www.ShareMe.bio Bot Help:\n\n` +
     `💬 <b>Commands</b>\n` +
     `/start - Manage your account and posts\n` +
     `/help - Show this help message\n\n` +
@@ -449,7 +449,7 @@ bot.action('my_account', async (ctx) => {
     
     // Edit the message instead of sending a new one
     await ctx.editMessageText(
-      `This is your current Shareme.bio account:\n\n${fullName}\n\nAuthor: ${authorName}\n\n${postCount} posts.`,
+      `This is your current www.shareme.bio account:\n\n${fullName}\n\nAuthor: ${authorName}\n\n${postCount} posts.`,
       {
         reply_markup: {
           inline_keyboard: [
@@ -702,7 +702,7 @@ bot.on('inline_query', async (ctx) => {
           title: 'No user found',
           description: `No user found with username "${username}"`,
           input_message_content: {
-            message_text: `Could not find user "${username}" on shareme.bio`
+            message_text: `Could not find user "${username}" on www.shareme.bio`
           }
         }]);
         return;
@@ -723,7 +723,7 @@ bot.on('inline_query', async (ctx) => {
             title: `${user.authorName} (no posts)`,
             description: 'This user has no posts.',
             input_message_content: {
-              message_text: `${user.authorName} has no posts on shareme.bio`
+              message_text: `${user.authorName} has no posts on www.shareme.bio`
             }
           });
           continue;

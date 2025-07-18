@@ -94,59 +94,37 @@ export class SitemapGenerator {
 
   // Generate robots.txt content
   generateRobotsTxt() {
-    const timestamp = new Date().toISOString();
-    
-    return `# Robots.txt for ShareMe.bio
-# Last updated: ${timestamp}
+    return `# Robots.txt for www.ShareMe.bio
 
-# Allow all search engines
 User-agent: *
 Allow: /
-
-# Allow all public pages
-Allow: /new
-Allow: /dashboard
-Allow: /auth-success
-
-# Disallow private/admin areas
-Disallow: /edit/
-Disallow: /delete-post/
-Disallow: /logout
 Disallow: /auth/
-Disallow: /telegram/
+Disallow: /edit/
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /publish
+Disallow: /custom-url
+Disallow: /check-url
+Disallow: /success
 
-# Disallow temporary or system files
-Disallow: /temp/
-Disallow: /admin/
-Disallow: /api/private/
-
-# Allow important files
+# Allow sitemap access
 Allow: /sitemap.xml
 Allow: /sitemap-index.xml
 Allow: /robots.txt
-Allow: /css/
-Allow: /js/
-Allow: /images/
+
+# Crawl delays
+Crawl-delay: 5
+
+# Specific bot rules
+User-agent: Googlebot
+Crawl-delay: 2
+
+User-agent: Bingbot
+Crawl-delay: 3
 
 # Sitemap location
 Sitemap: ${this.baseUrl}/sitemap.xml
 Sitemap: ${this.baseUrl}/sitemap-index.xml
-
-# Crawl delay (be respectful to server)
-Crawl-delay: 1
-
-# Specific rules for major search engines
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Slurp
-Allow: /
-Crawl-delay: 1
 
 # Block bad bots
 User-agent: AhrefsBot
