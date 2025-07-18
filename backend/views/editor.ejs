@@ -17,9 +17,25 @@
       var page = {};
     }
     
+    // Extract first image from content if available
+    let contentImage = null;
+    if (page && page.content) {
+      const imgMatch = page.content.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+      if (imgMatch && imgMatch[1]) {
+        // If image URL is relative, make it absolute
+        let imgUrl = imgMatch[1];
+        if (imgUrl.startsWith('/')) {
+          imgUrl = (typeof currentUrl !== 'undefined' ? 
+            currentUrl.substring(0, currentUrl.indexOf('/', 8)) : 'https://www.shareme.bio') + imgUrl;
+        }
+        contentImage = imgUrl;
+      }
+    }
+    
     // Set properties on page object for meta tags only
     page.metaTitle = pageTitle;
     page.description = pageDescription;
+    page.image = contentImage; // Will be undefined if no image found
   %>
   <%- include('layouts/header') %>
 </head>
@@ -35,7 +51,7 @@
         </div>
         
         <div class="input-wrapper" id="authorWrapper">
-          <div class="placeholder-text name-placeholder">Your name</div>
+          <div class="placeholder-text name-placeholder">Author name</div>
           <input id="author" class="author-input" value="<%= locals.user && locals.user.authorName ? locals.user.authorName : (locals.user && locals.user.name ? locals.user.name : '') %>" />
         </div>
         

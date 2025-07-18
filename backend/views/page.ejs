@@ -18,8 +18,24 @@
       description = `Read "${page.title}" on Share Me`;
     }
     
-    // Set page description for meta tags
+    // Extract first image from content if available
+    let contentImage = null;
+    if (page.content) {
+      const imgMatch = page.content.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+      if (imgMatch && imgMatch[1]) {
+        // If image URL is relative, make it absolute
+        let imgUrl = imgMatch[1];
+        if (imgUrl.startsWith('/')) {
+          imgUrl = (typeof currentUrl !== 'undefined' ? 
+            currentUrl.substring(0, currentUrl.indexOf('/', 8)) : 'https://www.shareme.bio') + imgUrl;
+        }
+        contentImage = imgUrl;
+      }
+    }
+    
+    // Set page properties for meta tags
     page.description = description;
+    page.image = contentImage; // Will be undefined if no image found
   %>
   <%- include('layouts/header') %>
   <style>
