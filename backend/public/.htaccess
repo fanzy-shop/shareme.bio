@@ -1,0 +1,16 @@
+# Enable URL rewriting
+RewriteEngine On
+
+# Redirect non-www to www (for shareme.bio)
+RewriteCond %{HTTP_HOST} ^shareme\.bio$ [NC]
+RewriteRule ^(.*)$ https://www.shareme.bio/$1 [R=301,L]
+
+# Redirect http to https
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^(www\.)?shareme\.bio$ [NC]
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# Handle requests for non-existent files or directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ / [L,QSA] 

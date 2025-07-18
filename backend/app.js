@@ -21,6 +21,24 @@ const PORT = process.env.PORT || 8080;
 // Set base URL from environment or default
 process.env.BASE_URL = process.env.BASE_URL || 'https://www.shareme.bio';
 
+// Middleware to redirect non-www URLs to www
+app.use((req, res, next) => {
+  // Get host from request headers
+  const host = req.get('host');
+  
+  // Check if we need to redirect (non-www shareme.bio domain)
+  if (host && host.match(/^(shareme\.bio)$/i)) {
+    // Build redirect URL with www
+    const redirectUrl = `https://www.shareme.bio${req.originalUrl}`;
+    
+    // Perform 301 (permanent) redirect
+    return res.redirect(301, redirectUrl);
+  }
+  
+  // Continue to next middleware if no redirect needed
+  next();
+});
+
 app.set('view engine', 'ejs');
 app.set('views', path.resolve(__dirname, 'views'));
 
